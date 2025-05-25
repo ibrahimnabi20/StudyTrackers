@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:10.5
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: mypassword
+      MYSQL_DATABASE: studytrackerdb
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./backend/Migrations:/docker-entrypoint-initdb.d
+
+volumes:
+  dbdata:

@@ -1,0 +1,18 @@
+{
+  "LogLevel": {
+    "Default": "Information",
+    "Microsoft": "Warning"
+  },
+  "WriteTo": [
+    {
+      "Name": "Console"
+    },
+    {
+      "Name": "File",
+      "Args": {
+        "path": "Logs/log.txt",
+        "rollingInterval": "Day"
+      }
+    }
+  ]
+}
