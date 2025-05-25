@@ -1,29 +1,31 @@
 name: CI Build & Test
 
+# Trigger this workflow on any push or pull request to the 'master' branch
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
-    build-test:
-        runs-on: ubuntu-latest
-        
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v3
+  build-test:
+    name: Build and test .NET backend
+    runs-on: ubuntu-latest
 
-            - name: Setup .NET 8
-              uses: actions/setup-dotnet@v3
-              with:
-                  dotnet-version: 8.0.x
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-            - name: Restore dependencies
-              run: dotnet restore
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
 
-            - name: Build the solution
-              run: dotnet build --no-restore --configuration Release
+      - name: Restore dependencies
+        run: dotnet restore
 
-            - name: Run unit tests
-              run: dotnet test --no-build --verbosity normal
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test --no-build --verbosity normal
