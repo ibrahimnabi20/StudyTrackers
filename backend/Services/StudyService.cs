@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using StudyTracker.Data;
 using StudyTracker.Models;
 using System.Collections.Generic;

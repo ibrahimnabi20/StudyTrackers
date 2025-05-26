@@ -1,1 +1,9 @@
-Placeholder for StudyTracker/version.txt
+Initial DevOps project setup with CI pipeline and MariaDB integration  
+Added feature toggles and logging configuration  
+Implemented xUnit unit testing and connected backend to frontend  
+Added Playwright E2E test and React improvements  
+Introduced mutation testing with Stryker.NET  
+Implemented tag system and color coding (removed later)  
+Removed extra frontend features and restored original functionality  
+Setup SonarQube analysis with GitHub Actions  
+Added code coverage collection and SonarQube Quality Gate fixes  

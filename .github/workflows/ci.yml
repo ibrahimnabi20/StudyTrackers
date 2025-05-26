@@ -1,3 +1,4 @@
+
 name: CI Build & Sonar
 
 on:
@@ -29,6 +30,14 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test --no-build --logger trx
+
+      - name: Run Mutation Tests
+        run: |
+          dotnet tool restore
+          dotnet stryker --project tests/UnitTests/UnitTests.csproj
 
       - name: End SonarQube analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
