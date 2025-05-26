@@ -1,0 +1,13 @@
+z
+oC:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.MvcApplicationPartsAssemblyInfo.csutf-8g
+\C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.AssemblyInfo.csutf-8y
+nC:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.csutf-8i
+^C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.GlobalUsings.g.csutf-8B
+9C:\Users\ibrah\Downloads\StudyTrackers\backend\Startup.csutf-8P
+GC:\Users\ibrah\Downloads\StudyTrackers\backend\Services\StudyService.csutf-8Q
+HC:\Users\ibrah\Downloads\StudyTrackers\backend\Services\IStudyService.csutf-8B
+9C:\Users\ibrah\Downloads\StudyTrackers\backend\Program.csutf-8L
+CC:\Users\ibrah\Downloads\StudyTrackers\backend\Models\StudyEntry.csutf-8P
+GC:\Users\ibrah\Downloads\StudyTrackers\backend\Models\FeatureToggles.csutf-8N
+EC:\Users\ibrah\Downloads\StudyTrackers\backend\Data\StudyDbContext.csutf-8V
+MC:\Users\ibrah\Downloads\StudyTrackers\backend\Controllers\StudyController.csutf-8

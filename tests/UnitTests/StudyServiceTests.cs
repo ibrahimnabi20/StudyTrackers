@@ -10,11 +10,11 @@ namespace UnitTests
 {
     public class StudyServiceTests
     {
-        // Helper method: sets up an in-memory EF Core context
+        // Creates a new in-memory EF Core context per test using a unique database name
         private StudyService GetInMemoryService()
         {
             var options = new DbContextOptionsBuilder<StudyDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb") // No real database needed
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()) // Unique DB per test run
                 .Options;
 
             var context = new StudyDbContext(options);

@@ -1,0 +1,6 @@
+projectKey=StudyTracker
+serverUrl=http://sonarqube.setgo.dk:9000
+serverVersion=25.1.0.102122
+dashboardUrl=http://sonarqube.setgo.dk:9000/dashboard?id=StudyTracker
+ceTaskId=40f123f6-d1dd-4e33-b0a2-fe924d0ad04c
+ceTaskUrl=http://sonarqube.setgo.dk:9000/api/ce/task?id=40f123f6-d1dd-4e33-b0a2-fe924d0ad04c

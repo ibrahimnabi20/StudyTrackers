@@ -1,31 +1,36 @@
-name: CI Build & Test
+name: CI Build & Sonar
 
-# Trigger this workflow on any push or pull request to the 'master' branch
 on:
   push:
-    branches: [master]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [master]
+    branches: [ "main", "master" ]
 
 jobs:
-  build-test:
-    name: Build and test .NET backend
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup .NET 8
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Install SonarScanner
+        run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
+      - name: Start SonarQube analysis
+        run: dotnet sonarscanner begin /k:"StudyTracker" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="http://sonarqube.setgo.dk:9000"
+        env:
+          PATH: ${{ runner.tool_cache }}/dotnet/tools:$PATH
 
-      - name: Run unit tests
-        run: dotnet test --no-build --verbosity normal
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: End SonarQube analysis
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        env:
+          PATH: ${{ runner.tool_cache }}/dotnet/tools:$PATH

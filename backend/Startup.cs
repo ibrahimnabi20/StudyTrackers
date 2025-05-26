@@ -6,52 +6,61 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using StudyTracker.Data;
 using StudyTracker.Services;
+using StudyTracker.Models;
+using System.Text.Json;
 
 namespace StudyTracker
 {
     public class Startup
     {
         public IConfiguration Configuration { get; }
+        private readonly IWebHostEnvironment _env;
 
-        // Loads configuration from appsettings.json
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            _env = env;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
-            // Registers EF Core with MariaDB
+            // Register EF Core with MariaDB
             services.AddDbContext<StudyDbContext>(options =>
                 options.UseMySql(
                     Configuration.GetConnectionString("DefaultConnection"),
                     ServerVersion.AutoDetect(Configuration.GetConnectionString("DefaultConnection"))
                 ));
 
-            // Registers dependency injection for service layer
+            // Register services
             services.AddScoped<IStudyService, StudyService>();
 
-            // Allow any origin for demo/testing purposes
+            // Register CORS policy
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", builder =>
                     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             });
 
-            // Enables Swagger for API documentation
+            // Register Swagger
             services.AddSwaggerGen();
+
+            // Load feature toggles from JSON file
+            var togglePath = Path.Combine(_env.ContentRootPath, "FeatureToggles", "toggles.json");
+            var toggleJson = File.ReadAllText(togglePath);
+            var featureToggles = JsonSerializer.Deserialize<FeatureToggles>(toggleJson);
+
+            // Register feature toggles in DI container
+            services.AddSingleton(featureToggles);
         }
 
-        // This method configures the HTTP request pipeline
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage(); // Show detailed errors in development
-                app.UseSwagger();                // Enable Swagger UI
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
@@ -61,7 +70,7 @@ namespace StudyTracker
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers(); // Maps controller endpoints
+                endpoints.MapControllers();
             });
         }
     }
