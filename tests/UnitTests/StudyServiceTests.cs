@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StudyTracker.Data;
@@ -10,44 +9,49 @@ namespace UnitTests
 {
     public class StudyServiceTests
     {
-        // Creates a new in-memory EF Core context per test using a unique database name
-        private StudyService GetInMemoryService()
+        private StudyDbContext GetTestDbContext()
         {
             var options = new DbContextOptionsBuilder<StudyDbContext>()
-                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()) // Unique DB per test run
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString())
                 .Options;
 
-            var context = new StudyDbContext(options);
-            return new StudyService(context);
+            return new StudyDbContext(options);
         }
 
         [Fact]
-        public async Task CreateAsync_ShouldAddEntry()
+        public async Task CreateAndGetAll_ShouldReturnCreatedEntry()
         {
             // Arrange
-            var service = GetInMemoryService();
-            var entry = new StudyEntry { Subject = "Math", DurationInMinutes = 60 };
+            var context = GetTestDbContext();
+            var service = new StudyService(context);
+            var newEntry = new StudyEntry { Subject = "Math", DurationInMinutes = 45 };
 
             // Act
-            var result = await service.CreateAsync(entry);
+            await service.CreateAsync(newEntry);
+            var all = await service.GetAllAsync();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("Math", result.Subject);
+            Assert.Single(all);
+            Assert.Equal("Math", all[0].Subject);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnEntries()
+        public async Task DeleteAndGetById_ShouldReturnNullAfterDeletion()
         {
             // Arrange
-            var service = GetInMemoryService();
-            await service.CreateAsync(new StudyEntry { Subject = "Science", DurationInMinutes = 45 });
+            var context = GetTestDbContext();
+            var service = new StudyService(context);
+            var created = await service.CreateAsync(new StudyEntry { Subject = "Physics", DurationInMinutes = 30 });
 
             // Act
-            var result = await service.GetAllAsync();
+            var fetched = await service.GetByIdAsync(created.Id);
+            await service.DeleteAsync(created.Id);
+            var afterDelete = await service.GetByIdAsync(created.Id);
 
             // Assert
-            Assert.Single(result);
+            Assert.NotNull(fetched);
+            Assert.Equal("Physics", fetched.Subject);
+            Assert.Null(afterDelete);
         }
     }
 }
