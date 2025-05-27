@@ -22,31 +22,32 @@ jobs:
       - name: Install dependencies
         run: dotnet restore StudyTrackers.sln
 
-      - name: Install tools
-        run: |
-          dotnet tool install --tool-path ./.tools dotnet-sonarscanner
-          dotnet tool install --tool-path ./.tools dotnet-reportgenerator-globaltool
-
-      - name: Start SonarQube analysis
-        run: |
-          ./.tools/dotnet-sonarscanner begin \
-            /k:"StudyTracker" \
-            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
-            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
-
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
 
       - name: Run tests with coverage
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
       - name: Generate coverage report
         run: |
-          ./.tools/reportgenerator \
+          reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
-      - name: End SonarQube analysis
-        run: ./.tools/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: Install sonar-scanner
+        run: npm install -g sonar-scanner
+
+      - name: Run SonarQube analysis
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=StudyTracker \
+            -Dsonar.host.url=http://sonarqube.setgo.dk:9000 \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.cs.opencover.reportsPaths=coverage-report/Cobertura.xml \
+            -Dsonar.sources=backend \
+            -Dsonar.language=cs \
+            -Dsonar.exclusions=**/node_modules/**,**/*.test.*,frontend/**
