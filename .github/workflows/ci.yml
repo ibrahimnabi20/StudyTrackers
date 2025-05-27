@@ -19,26 +19,19 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Restore .NET tools (SonarScanner & ReportGenerator)
+        run: dotnet tool restore
+
       - name: Install dependencies
         run: dotnet restore StudyTrackers.sln
 
-      - name: Install tools (SonarScanner & ReportGenerator)
-        run: |
-          dotnet tool install --global dotnet-sonarscanner
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-        env:
-          DOTNET_ROOT: ${{ runner.tool_cache }}/dotnet
-          PATH: ${{ runner.tool_cache }}/dotnet/tools:${{ env.PATH }}
-
       - name: Start SonarQube analysis
-        run: dotnet-sonarscanner begin \
-          /k:"StudyTracker" \
-          /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-          /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
-          /d:sonar.cs.opencover.reportsPaths="coverage/Cobertura.xml"
-        env:
-          DOTNET_ROOT: ${{ runner.tool_cache }}/dotnet
-          PATH: ${{ runner.tool_cache }}/dotnet/tools:${{ env.PATH }}
+        run: |
+          dotnet tool run dotnet-sonarscanner begin \
+            /k:"StudyTracker" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.cs.opencover.reportsPaths="coverage/Cobertura.xml"
 
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
@@ -48,16 +41,10 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          reportgenerator \
+          dotnet tool run reportgenerator \
             -reports:"**/coverage.cobertura.xml" \
             -targetdir:"coverage" \
             -reporttypes:"Cobertura"
-        env:
-          DOTNET_ROOT: ${{ runner.tool_cache }}/dotnet
-          PATH: ${{ runner.tool_cache }}/dotnet/tools:${{ env.PATH }}
 
       - name: End SonarQube analysis
-        run: dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-        env:
-          DOTNET_ROOT: ${{ runner.tool_cache }}/dotnet
-          PATH: ${{ runner.tool_cache }}/dotnet/tools:${{ env.PATH }}
+        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
