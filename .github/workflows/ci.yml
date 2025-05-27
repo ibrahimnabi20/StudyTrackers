@@ -22,19 +22,20 @@ jobs:
       - name: Install dependencies
         run: dotnet restore StudyTrackers.sln
 
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Install SonarScanner for .NET
-        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Install tools (SonarScanner & ReportGenerator)
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+        env:
+          PATH: $PATH:~/.dotnet/tools
 
       - name: Start SonarQube analysis
         run: |
-          dotnet sonarscanner begin \
+          ~/.dotnet/tools/dotnet-sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
-            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
+            /d:sonar.cs.opencover.reportsPaths="coverage/Cobertura.xml"
 
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
@@ -45,9 +46,9 @@ jobs:
       - name: Generate coverage report
         run: |
           reportgenerator \
-            -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
-            -targetdir:"coverage-report" \
+            -reports:"**/coverage.cobertura.xml" \
+            -targetdir:"coverage" \
             -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
-        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: ~/.dotnet/tools/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
