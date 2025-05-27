@@ -2,9 +2,9 @@ name: CI Build & Test
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
 
 jobs:
   build:
@@ -19,36 +19,48 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install .NET tools (SonarScanner + ReportGenerator)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install .NET dependencies
+        run: dotnet restore StudyTrackers.sln
+
+      - name: Create .NET tool manifest
+        run: dotnet new tool-manifest --force
+
+      - name: Install .NET tools
         run: |
-          dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
           dotnet tool install dotnet-reportgenerator-globaltool
 
       - name: Start SonarQube analysis
         run: |
-          dotnet tool run dotnet-sonarscanner begin \
+          dotnet sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Restore and Build
-        run: |
-          dotnet restore StudyTrackers.sln
-          dotnet build StudyTrackers.sln --no-restore
+      - name: Build solution
+        run: dotnet build StudyTrackers.sln --no-restore
 
-      - name: Run tests with coverage
-        run: |
-          dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" \
-            --results-directory tests/UnitTests/TestResults
+      - name: Run unit tests with coverage
+        run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
       - name: Generate coverage report
         run: |
-          dotnet tool run reportgenerator \
-            -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
+          ~/.dotnet/tools/reportgenerator \
+            -reports:"**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
-        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Install Playwright
+        run: npx playwright install
+
+      - name: Run Playwright E2E tests
+        run: npx playwright test tests/studytracker.spec.js
