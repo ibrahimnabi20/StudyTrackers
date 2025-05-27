@@ -22,17 +22,14 @@ jobs:
       - name: Install dependencies
         run: dotnet restore StudyTrackers.sln
 
-      - name: Create tool manifest
-        run: dotnet new tool-manifest
-
-      - name: Install SonarScanner + ReportGenerator
+      - name: Install tools
         run: |
-          dotnet tool install dotnet-sonarscanner
-          dotnet tool install dotnet-reportgenerator-globaltool
+          dotnet tool install --tool-path ./.tools dotnet-sonarscanner
+          dotnet tool install --tool-path ./.tools dotnet-reportgenerator-globaltool
 
       - name: Start SonarQube analysis
         run: |
-          dotnet tool run dotnet-sonarscanner begin \
+          ./.tools/dotnet-sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
@@ -46,10 +43,10 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          dotnet tool run reportgenerator \
+          ./.tools/reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
-        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: ./.tools/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
