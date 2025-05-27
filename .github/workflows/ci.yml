@@ -19,30 +19,30 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install SonarScanner + ReportGenerator
+      - name: Install .NET tools (SonarScanner + ReportGenerator)
         run: |
-          dotnet tool install --global dotnet-sonarscanner
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-        shell: bash
+          dotnet new tool-manifest
+          dotnet tool install dotnet-sonarscanner
+          dotnet tool install dotnet-reportgenerator-globaltool
 
-      - name: Add tool path to environment
-        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
+      - name: Add .NET tools to PATH
+        run: echo "./.config/dotnet/tools" >> $GITHUB_PATH
 
-      - name: Clean old test results
-        run: rm -rf tests/UnitTests/TestResults
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Start SonarQube analysis
+        run: |
+          dotnet sonarscanner begin \
+            /k:"StudyTracker" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
       - name: Restore dependencies
         run: dotnet restore StudyTrackers.sln
 
-      - name: Begin SonarQube analysis
-        run: |
-          dotnet sonarscanner begin \
-            /k:"StudyTracker" \
-            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
-            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.opencover.reportsPaths="**/coverage.cobertura.xml"
-
-      - name: Build
+      - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
 
       - name: Run tests with code coverage
@@ -50,7 +50,7 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          reportgenerator \
+          ~/.dotnet/tools/reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
