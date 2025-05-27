@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "ZvlwsXeAK1U=",
+  "dgSpecHash": "Yod+AQM/Hzg=",
   "success": true,
   "projectFilePath": "C:\\Users\\ibrah\\Downloads\\StudyTrackers\\tests\\UnitTests\\UnitTests.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\ibrah\\.nuget\\packages\\coverlet.collector\\3.2.0\\coverlet.collector.3.2.0.nupkg.sha512",
     "C:\\Users\\ibrah\\.nuget\\packages\\microsoft.codecoverage\\17.10.0\\microsoft.codecoverage.17.10.0.nupkg.sha512",
     "C:\\Users\\ibrah\\.nuget\\packages\\microsoft.entityframeworkcore\\8.0.0\\microsoft.entityframeworkcore.8.0.0.nupkg.sha512",
     "C:\\Users\\ibrah\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\8.0.0\\microsoft.entityframeworkcore.abstractions.8.0.0.nupkg.sha512",
@@ -131,16 +132,5 @@
     "C:\\Users\\ibrah\\.nuget\\packages\\xunit.extensibility.execution\\2.4.2\\xunit.extensibility.execution.2.4.2.nupkg.sha512",
     "C:\\Users\\ibrah\\.nuget\\packages\\xunit.runner.visualstudio\\2.4.5\\xunit.runner.visualstudio.2.4.5.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "UnitTests depends on Microsoft.NET.Test.Sdk (>= 17.9.4) but Microsoft.NET.Test.Sdk 17.9.4 was not found. Microsoft.NET.Test.Sdk 17.10.0 was resolved instead.",
-      "libraryId": "Microsoft.NET.Test.Sdk",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  "logs": []
 }

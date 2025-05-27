@@ -1,1 +1,0 @@
-XRBC:\Users\ibrah\Downloads\StudyTrackers\backend\StudyTracker.csproj¢net8.0òCSharp12

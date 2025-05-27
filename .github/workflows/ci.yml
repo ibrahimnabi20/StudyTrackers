@@ -1,17 +1,15 @@
-name: CI
+name: CI Build & Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
 
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -20,25 +18,30 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Install SonarScanner
-        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Install dependencies
+        run: dotnet restore StudyTrackers.sln
 
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
       - name: Start SonarQube analysis
-        run: dotnet sonarscanner begin /k:"StudyTracker" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="$SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths="tests/UnitTests/TestResults/**/coverage.cobertura.xml"
+        run: |
+          dotnet sonarscanner begin \
+            /k:"StudyTracker" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Build
-        run: dotnet build
+      - name: Build solution
+        run: dotnet build StudyTrackers.sln --no-restore
 
       - name: Run tests with coverage
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
-      - name: Convert coverage to Cobertura
-        run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Cobertura
+      - name: Generate coverage report
+        run: reportgenerator -reports:"tests/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Cobertura
 
       - name: End SonarQube analysis
-        run: dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

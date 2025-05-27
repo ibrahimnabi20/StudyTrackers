@@ -127,3 +127,4 @@ C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\obj\Debug\net8.0\UnitTest
 C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\obj\Debug\net8.0\refint\UnitTests.dll
 C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\obj\Debug\net8.0\UnitTests.pdb
 C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\obj\Debug\net8.0\ref\UnitTests.dll
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\bin\Debug\net8.0\CoverletSourceRootsMapping
