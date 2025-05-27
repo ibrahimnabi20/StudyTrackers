@@ -19,35 +19,34 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install dependencies
-        run: dotnet restore StudyTrackers.sln
+      - name: Install .NET tools (SonarScanner + ReportGenerator)
+        run: |
+          dotnet new tool-manifest --force
+          dotnet tool install dotnet-sonarscanner
+          dotnet tool install dotnet-reportgenerator-globaltool
 
-      - name: Build solution
-        run: dotnet build StudyTrackers.sln --no-restore
+      - name: Start SonarQube analysis
+        run: |
+          dotnet tool run dotnet-sonarscanner begin \
+            /k:"StudyTracker" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
+
+      - name: Restore and Build
+        run: |
+          dotnet restore StudyTrackers.sln
+          dotnet build StudyTrackers.sln --no-restore
 
       - name: Run tests with coverage
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
       - name: Generate coverage report
         run: |
-          reportgenerator \
+          dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
-      - name: Install sonar-scanner
-        run: npm install -g sonar-scanner
-
-      - name: Run SonarQube analysis
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=StudyTracker \
-            -Dsonar.host.url=http://sonarqube.setgo.dk:9000 \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.cs.opencover.reportsPaths=coverage-report/Cobertura.xml \
-            -Dsonar.sources=backend \
-            -Dsonar.language=cs \
-            -Dsonar.exclusions=**/node_modules/**,**/*.test.*,frontend/**
+      - name: End SonarQube analysis
+        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
