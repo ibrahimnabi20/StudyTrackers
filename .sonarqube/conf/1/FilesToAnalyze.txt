@@ -1,0 +1,13 @@
+﻿C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\StudyServiceTests.cs
+C:\Users\ibrah\.nuget\packages\microsoft.net.test.sdk\17.10.0\build\netcoreapp3.1\Microsoft.NET.Test.Sdk.Program.cs
+C:\Users\ibrah\.nuget\packages\microsoft.testplatform.testhost\17.10.0\build\netcoreapp3.1\x64\testhost.exe
+C:\Users\ibrah\.nuget\packages\microsoft.testplatform.testhost\17.10.0\build\netcoreapp3.1\x64\testhost.dll
+C:\Users\ibrah\.nuget\packages\xunit.runner.visualstudio\2.4.5\build\netcoreapp3.1\xunit.runner.visualstudio.dotnetcore.testadapter.dll
+C:\Users\ibrah\.nuget\packages\xunit.runner.visualstudio\2.4.5\build\netcoreapp3.1\xunit.runner.reporters.netcoreapp10.dll
+C:\Users\ibrah\.nuget\packages\xunit.runner.visualstudio\2.4.5\build\netcoreapp3.1\xunit.runner.utility.netcoreapp10.dll
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\StrykerOutput\2025-05-26.13-24-39\.gitignore
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\StrykerOutput\2025-05-26.13-28-56\.gitignore
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\StrykerOutput\2025-05-26.13-50-01\.gitignore
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\StrykerOutput\2025-05-26.13-50-01\reports\mutation-report.html
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\TestResults\0f0b043f-f770-4e61-8ab3-786239ebff52\coverage.cobertura.xml
+C:\Users\ibrah\Downloads\StudyTrackers\tests\UnitTests\TestResults\335b55c8-71ce-496a-a0ad-84a6651a663a\coverage.cobertura.xml
