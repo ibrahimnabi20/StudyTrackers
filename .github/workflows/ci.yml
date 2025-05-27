@@ -21,7 +21,7 @@ jobs:
 
       - name: Install .NET tools (SonarScanner + ReportGenerator)
         run: |
-          dotnet new tool-manifest
+          dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
           dotnet tool install dotnet-reportgenerator-globaltool
 
