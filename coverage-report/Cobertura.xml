@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage line-rate="0.16304347826086957" branch-rate="0" lines-covered="15" lines-valid="92" branches-covered="0" branches-valid="10" complexity="29" version="0" timestamp="1748376460">
+<coverage line-rate="0.26595744680851063" branch-rate="0.16666666666666666" lines-covered="25" lines-valid="94" branches-covered="2" branches-valid="12" complexity="30" version="0" timestamp="1748395234">
   <sources>
     <source>C:\Users\ibrah\Downloads\StudyTrackers\backend\</source>
   </sources>
   <packages>
-    <package name="StudyTracker" line-rate="0.16304347826086957" branch-rate="0" complexity="29">
+    <package name="StudyTracker" line-rate="0.26595744680851063" branch-rate="0.16666666666666666" complexity="30">
       <classes>
         <class name="StudyTracker.Controllers.StudyController" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Controllers\StudyController.cs" line-rate="0" branch-rate="0" complexity="8">
           <methods>
@@ -73,18 +73,18 @@
           <methods>
             <method name="get_StudyEntries" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="11" hits="15" branch="false" />
+                <line number="11" hits="9" branch="false" />
               </lines>
             </method>
             <method name=".ctor" signature="(Microsoft.EntityFrameworkCore.DbContextOptions`1&lt;StudyTracker.Data.StudyDbContext&gt;)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="9" hits="18" branch="false" />
+                <line number="9" hits="6" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="9" hits="18" branch="false" />
-            <line number="11" hits="15" branch="false" />
+            <line number="9" hits="6" branch="false" />
+            <line number="11" hits="9" branch="false" />
           </lines>
         </class>
         <class name="StudyTracker.Models.FeatureToggles" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Models\FeatureToggles.cs" line-rate="0" branch-rate="1" complexity="2">
@@ -105,34 +105,34 @@
             <line number="6" hits="0" branch="false" />
           </lines>
         </class>
-        <class name="StudyTracker.Models.StudyEntry" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Models\StudyEntry.cs" line-rate="0.75" branch-rate="1" complexity="4">
+        <class name="StudyTracker.Models.StudyEntry" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Models\StudyEntry.cs" line-rate="1" branch-rate="1" complexity="4">
           <methods>
-            <method name="get_Id" signature="()" line-rate="0" branch-rate="1" complexity="1">
+            <method name="get_Id" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="5" hits="0" branch="false" />
+                <line number="5" hits="3" branch="false" />
               </lines>
             </method>
             <method name="get_Subject" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="6" hits="9" branch="false" />
+                <line number="6" hits="4" branch="false" />
               </lines>
             </method>
             <method name="get_DurationInMinutes" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="7" hits="6" branch="false" />
+                <line number="7" hits="4" branch="false" />
               </lines>
             </method>
             <method name="get_Timestamp" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="6" branch="false" />
+                <line number="8" hits="2" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="5" hits="0" branch="false" />
-            <line number="6" hits="9" branch="false" />
-            <line number="7" hits="6" branch="false" />
-            <line number="8" hits="6" branch="false" />
+            <line number="5" hits="3" branch="false" />
+            <line number="6" hits="4" branch="false" />
+            <line number="7" hits="4" branch="false" />
+            <line number="8" hits="2" branch="false" />
           </lines>
         </class>
         <class name="StudyTracker.Program" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Program.cs" line-rate="0" branch-rate="1" complexity="2">
@@ -165,66 +165,70 @@
             <line number="20" hits="0" branch="false" />
           </lines>
         </class>
-        <class name="StudyTracker.Services.StudyService" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Services\StudyService.cs" line-rate="0.5555555555555556" branch-rate="0" complexity="6">
+        <class name="StudyTracker.Services.StudyService" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Services\StudyService.cs" line-rate="0.95" branch-rate="0.5" complexity="7">
           <methods>
             <method name=".ctor" signature="(StudyTracker.Data.StudyDbContext)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="13" hits="6" branch="false" />
-                <line number="14" hits="6" branch="false" />
-                <line number="15" hits="6" branch="false" />
-                <line number="16" hits="6" branch="false" />
+                <line number="13" hits="2" branch="false" />
+                <line number="14" hits="2" branch="false" />
+                <line number="15" hits="2" branch="false" />
+                <line number="16" hits="2" branch="false" />
               </lines>
             </method>
-            <method name="CreateAsync" signature="()" line-rate="1" branch-rate="1" complexity="1">
+            <method name="CreateAsync" signature="()" line-rate="0.8571428571428571" branch-rate="0.5" complexity="2">
               <lines>
-                <line number="25" hits="6" branch="false" />
-                <line number="26" hits="6" branch="false" />
-                <line number="27" hits="6" branch="false" />
-                <line number="28" hits="6" branch="false" />
-                <line number="29" hits="6" branch="false" />
+                <line number="25" hits="2" branch="false" />
+                <line number="26" hits="2" branch="true" condition-coverage="50% (1/2)" />
+                <line number="27" hits="0" branch="false" />
+                <line number="29" hits="2" branch="false" />
+                <line number="30" hits="2" branch="false" />
+                <line number="31" hits="2" branch="false" />
+                <line number="32" hits="2" branch="false" />
               </lines>
             </method>
-            <method name="DeleteAsync" signature="()" line-rate="0" branch-rate="0" complexity="2">
+            <method name="DeleteAsync" signature="()" line-rate="1" branch-rate="0.5" complexity="2">
               <lines>
-                <line number="32" hits="0" branch="false" />
-                <line number="33" hits="0" branch="false" />
-                <line number="34" hits="0" branch="true" condition-coverage="0% (0/2)" />
-                <line number="35" hits="0" branch="false" />
-                <line number="36" hits="0" branch="false" />
-                <line number="37" hits="0" branch="false" />
-                <line number="38" hits="0" branch="false" />
+                <line number="35" hits="1" branch="false" />
+                <line number="36" hits="1" branch="false" />
+                <line number="37" hits="1" branch="true" condition-coverage="50% (1/2)" />
+                <line number="39" hits="1" branch="false" />
+                <line number="40" hits="1" branch="false" />
+                <line number="41" hits="1" branch="false" />
+                <line number="42" hits="1" branch="false" />
               </lines>
             </method>
             <method name="GetAllAsync" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="19" hits="3" branch="false" />
+                <line number="19" hits="1" branch="false" />
               </lines>
             </method>
-            <method name="GetByIdAsync" signature="()" line-rate="0" branch-rate="1" complexity="1">
+            <method name="GetByIdAsync" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="22" hits="0" branch="false" />
+                <line number="22" hits="2" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="13" hits="6" branch="false" />
-            <line number="14" hits="6" branch="false" />
-            <line number="15" hits="6" branch="false" />
-            <line number="16" hits="6" branch="false" />
-            <line number="19" hits="3" branch="false" />
-            <line number="22" hits="0" branch="false" />
-            <line number="25" hits="6" branch="false" />
-            <line number="26" hits="6" branch="false" />
-            <line number="27" hits="6" branch="false" />
-            <line number="28" hits="6" branch="false" />
-            <line number="29" hits="6" branch="false" />
-            <line number="32" hits="0" branch="false" />
-            <line number="33" hits="0" branch="false" />
-            <line number="34" hits="0" branch="true" condition-coverage="0% (0/2)" />
-            <line number="35" hits="0" branch="false" />
-            <line number="36" hits="0" branch="false" />
-            <line number="37" hits="0" branch="false" />
-            <line number="38" hits="0" branch="false" />
+            <line number="13" hits="2" branch="false" />
+            <line number="14" hits="2" branch="false" />
+            <line number="15" hits="2" branch="false" />
+            <line number="16" hits="2" branch="false" />
+            <line number="19" hits="1" branch="false" />
+            <line number="22" hits="2" branch="false" />
+            <line number="25" hits="2" branch="false" />
+            <line number="26" hits="2" branch="true" condition-coverage="50% (1/2)" />
+            <line number="27" hits="0" branch="false" />
+            <line number="29" hits="2" branch="false" />
+            <line number="30" hits="2" branch="false" />
+            <line number="31" hits="2" branch="false" />
+            <line number="32" hits="2" branch="false" />
+            <line number="35" hits="1" branch="false" />
+            <line number="36" hits="1" branch="false" />
+            <line number="37" hits="1" branch="true" condition-coverage="50% (1/2)" />
+            <line number="39" hits="1" branch="false" />
+            <line number="40" hits="1" branch="false" />
+            <line number="41" hits="1" branch="false" />
+            <line number="42" hits="1" branch="false" />
           </lines>
         </class>
         <class name="StudyTracker.Startup" filename="C:\Users\ibrah\Downloads\StudyTrackers\backend\Startup.cs" line-rate="0" branch-rate="0" complexity="5">
