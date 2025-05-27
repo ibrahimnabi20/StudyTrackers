@@ -32,7 +32,7 @@ jobs:
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
-            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
+            /d:sonar.cs.opencover.reportsPaths="tests/UnitTests/TestResults/**/coverage.cobertura.xml"
 
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
@@ -41,7 +41,11 @@ jobs:
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
       - name: Generate coverage report
-        run: reportgenerator -reports:"tests/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Cobertura
+        run: |
+          reportgenerator \
+            -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"coverage-report" \
+            -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
