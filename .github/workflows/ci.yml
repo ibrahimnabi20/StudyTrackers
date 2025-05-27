@@ -34,7 +34,7 @@ jobs:
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
-            /d:sonar.cs.opencover.reportsPaths="tests/UnitTests/TestResults/**/coverage.cobertura.xml"
+            /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
