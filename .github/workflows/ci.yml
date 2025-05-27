@@ -19,41 +19,37 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install .NET tools (SonarScanner + ReportGenerator)
+      - name: Install dependencies
+        run: dotnet restore StudyTrackers.sln
+
+      - name: Create tool manifest
+        run: dotnet new tool-manifest
+
+      - name: Install SonarScanner + ReportGenerator
         run: |
-          dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
           dotnet tool install dotnet-reportgenerator-globaltool
 
-      - name: Add .NET tools to PATH
-        run: echo "./.config/dotnet/tools" >> $GITHUB_PATH
-
-      - name: Restore .NET tools
-        run: dotnet tool restore
-
       - name: Start SonarQube analysis
         run: |
-          dotnet sonarscanner begin \
+          dotnet tool run dotnet-sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Restore dependencies
-        run: dotnet restore StudyTrackers.sln
-
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
 
-      - name: Run tests with code coverage
+      - name: Run tests with coverage
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
       - name: Generate coverage report
         run: |
-          ~/.dotnet/tools/reportgenerator \
+          dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
-        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
