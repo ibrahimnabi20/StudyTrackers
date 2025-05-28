@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  backend:
+    image: mcr.microsoft.com/dotnet/aspnet:8.0
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: ["dotnet", "run", "--project", "StudyTracker.csproj"]
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+
   mariadb:
     image: mariadb:10.5
     restart: always
