@@ -19,48 +19,56 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+      - name: Create tool manifest (if needed)
+        run: dotnet new tool-manifest || true
 
-      - name: Install .NET dependencies
-        run: dotnet restore StudyTrackers.sln
-
-      - name: Create .NET tool manifest
-        run: dotnet new tool-manifest --force
-
-      - name: Install .NET tools
+      - name: Install SonarScanner & ReportGenerator
         run: |
           dotnet tool install dotnet-sonarscanner
           dotnet tool install dotnet-reportgenerator-globaltool
 
+      - name: Restore dependencies
+        run: dotnet restore StudyTrackers.sln
+
       - name: Start SonarQube analysis
         run: |
-          dotnet sonarscanner begin \
+          dotnet tool run dotnet-sonarscanner begin \
             /k:"StudyTracker" \
+            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
       - name: Build solution
         run: dotnet build StudyTrackers.sln --no-restore
 
-      - name: Run unit tests with coverage
+      - name: Run tests with coverage
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
       - name: Generate coverage report
-        run: |
-          ~/.dotnet/tools/reportgenerator \
-            -reports:"**/coverage.cobertura.xml" \
-            -targetdir:"coverage-report" \
-            -reporttypes:"Cobertura"
+        run: dotnet tool run reportgenerator \
+          -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
+          -targetdir:"coverage-report" \
+          -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
-        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-      - name: Install Playwright
-        run: npx playwright install
+      - name: Setup Node.js for Playwright
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-      - name: Run Playwright E2E tests
-        run: npx playwright test tests/studytracker.spec.js
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Install Playwright Browsers
+        run: |
+          cd frontend
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: |
+          cd frontend
+          npx playwright test
