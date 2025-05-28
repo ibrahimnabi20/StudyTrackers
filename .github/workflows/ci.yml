@@ -35,12 +35,15 @@ jobs:
 
       - name: Begin SonarQube analysis
         run: |
-          dotnet tool restore
+          dotnet tool install --global dotnet-sonarscanner
           dotnet sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
+
+      - name: Rebuild for SonarQube context
+        run: dotnet build StudyTrackers.sln
 
       - name: End SonarQube analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
