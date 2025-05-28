@@ -1,35 +1,97 @@
-# StudyTracker
+ StudyTracker
 
-StudyTracker is a full-stack DevOps exam project for tracking study sessions.
+StudyTracker is a full-stack study session tracker built with React and ASP.NET Core. It supports DevOps best practices with CI/CD, code quality tools, testing, and deployment via Docker.
 
-## Technologies used
+ Features
 
-- React (Vite) + Bootstrap 5
-- ASP.NET Core 8
-- MariaDB
-- Entity Framework Core
-- Serilog logging
-- Feature toggles (JSON-based)
-- GitHub Actions CI/CD
-- Unit tests (xUnit)
-- Playwright E2E tests (optional)
-- Docker + Docker Compose
-- SonarQube (optional)
-- Mutation testing with Stryker (optional)
+* Track study sessions with subject and duration
+* Relational MariaDB database
+* Logging with ILogger
+* Feature toggles
+* Full CI/CD with GitHub Actions
+* Unit testing (xUnit)
+* E2E testing (Playwright)
+* Mutation testing (Stryker)
+* Code analysis and coverage (SonarQube)
 
 ---
 
-## How to run the project locally
+Getting Started
 
-### Prerequisites
+Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
-- [Node.js (LTS)](https://nodejs.org/)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* Docker + Docker Compose
+* .NET 8 SDK
+* Node.js 18+
 
----
-
-### 1. Start database with Docker
+ 1. Clone og start Docker services
 
 ```bash
-docker-compose up -d
+git clone https://github.com/<your-repo>/StudyTrackers.git
+cd StudyTrackers
+docker compose up -d
+```
+
+Dette starter en MariaDB-database på port 3307 og indlæser migrations.
+
+2. Start backend (.NET)
+
+```bash
+cd backend
+dotnet run
+```
+
+API'et vil køre på [http://localhost:5000](http://localhost:5000)
+
+ 3. Start frontend (React)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontenden vil være tilgængelig på [http://localhost:5179](http://localhost:5179)
+
+---
+
+CI/CD Setup (GitHub Actions)
+
+Automatiseret build og test pipeline:
+
+* SonarQube analyse (quality gate "EASV way")
+* Unit tests + code coverage
+* Playwright E2E tests
+* Stryker mutation testing
+* Semantic versioning og release
+
+Se `.github/workflows/ci.yml` for detaljer.
+
+Kør tests lokalt
+
+Unit tests med coverage
+
+```bash
+dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
+```
+
+ Mutation tests (Stryker)
+
+```bash
+cd backend
+npx stryker run
+```
+
+### E2E tests (Playwright)
+
+```bash
+cd frontend
+npx playwright test
+```
+
+---
+
+ Miljøvariabler og konfiguration
+
+Feature toggles styres via `backend/FeatureToggles/toggles.json` og `appsettings.json`.
+
