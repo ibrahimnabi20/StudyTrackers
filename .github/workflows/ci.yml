@@ -28,14 +28,16 @@ jobs:
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
       - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+        run: dotnet tool update --global dotnet-reportgenerator-globaltool
 
       - name: Generate coverage report
         run: reportgenerator -reports:"tests/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Cobertura
 
+      - name: Install SonarScanner for .NET
+        run: dotnet tool update --global dotnet-sonarscanner
+
       - name: Begin SonarQube analysis
         run: |
-          dotnet tool install --global dotnet-sonarscanner
           dotnet sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
@@ -63,6 +65,3 @@ jobs:
         run: |
           cd frontend
           npx playwright test
-
-      - name: Start Docker Compose (frontend + backend)
-        run: docker compose up -d
