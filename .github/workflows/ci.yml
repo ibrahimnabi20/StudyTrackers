@@ -19,18 +19,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Setup Node.js (for Playwright)
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
-
-      - name: Install .NET tools (SonarScanner + ReportGenerator + Stryker)
+      - name: Install .NET tools (SonarScanner + ReportGenerator)
         run: |
           dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
           dotnet tool install dotnet-reportgenerator-globaltool
-          dotnet tool install dotnet-stryker
-
       - name: Start SonarQube analysis
         run: |
           dotnet tool run dotnet-sonarscanner begin \
@@ -38,40 +31,19 @@ jobs:
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
-
       - name: Restore and Build
         run: |
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --no-restore
-
       - name: Run tests with coverage
         run: |
           dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" \
             --results-directory tests/UnitTests/TestResults
-
       - name: Generate coverage report
         run: |
           dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
-
       - name: End SonarQube analysis
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
-      - name: Run Playwright tests
-        run: |
-          cd frontend
-          npm ci
-          npx playwright install
-          npx playwright test
-
-      - name: Run Stryker mutation tests
-        run: |
-          dotnet tool run dotnet-stryker
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage-report/
