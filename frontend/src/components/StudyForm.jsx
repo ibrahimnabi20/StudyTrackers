@@ -28,6 +28,7 @@ function StudyForm({ onNewEntry }) {
                 <input
                     className="form-control"
                     type="text"
+                    placeholder="Subject"
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
                     required
@@ -38,6 +39,7 @@ function StudyForm({ onNewEntry }) {
                 <input
                     className="form-control"
                     type="number"
+                    placeholder="Duration (min)"
                     value={duration}
                     onChange={e => setDuration(e.target.value)}
                     required
