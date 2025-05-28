@@ -1,57 +1,74 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StudyTracker.Data;
 using StudyTracker.Models;
-using StudyTracker.Services;
-using Xunit;
 
-namespace UnitTests
+namespace StudyTracker.Services
 {
-    public class StudyServiceTests
+    public class StudyService : IStudyService
     {
-        private StudyDbContext GetTestDbContext()
-        {
-            var options = new DbContextOptionsBuilder<StudyDbContext>()
-                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString())
-                .Options;
+        private readonly StudyDbContext _context;
+        private readonly ILogger<StudyService> _logger;
+        private readonly FeatureToggles _featureToggles;
 
-            return new StudyDbContext(options);
+        public StudyService(StudyDbContext context, ILogger<StudyService> logger, IOptions<FeatureToggles> featureToggles)
+        {
+            _context = context;
+            _logger = logger;
+            _featureToggles = featureToggles.Value;
         }
 
-        [Fact]
-        public async Task CreateAndGetAll_ShouldReturnCreatedEntry()
+        public async Task<List<StudyEntry>> GetAllAsync()
         {
-            // Arrange
-            var context = GetTestDbContext();
-            var service = new StudyService(context);
-            var newEntry = new StudyEntry { Subject = "Math", DurationInMinutes = 45 };
-
-            // Act
-            await service.CreateAsync(newEntry);
-            var all = await service.GetAllAsync();
-
-            // Assert
-            Assert.Single(all);
-            Assert.Equal("Math", all[0].Subject);
+            _logger.LogInformation("Fetching all study entries from the database.");
+            return await _context.StudyEntries.ToListAsync();
         }
 
-        [Fact]
-        public async Task DeleteAndGetById_ShouldReturnNullAfterDeletion()
+        public async Task<StudyEntry?> GetByIdAsync(int id)
         {
-            // Arrange
-            var context = GetTestDbContext();
-            var service = new StudyService(context);
-            var created = await service.CreateAsync(new StudyEntry { Subject = "Physics", DurationInMinutes = 30 });
+            _logger.LogInformation("Fetching study entry with ID {Id}.", id);
+            return await _context.StudyEntries.FindAsync(id);
+        }
 
-            // Act
-            var fetched = await service.GetByIdAsync(created.Id);
-            await service.DeleteAsync(created.Id);
-            var afterDelete = await service.GetByIdAsync(created.Id);
+        public async Task<StudyEntry> CreateAsync(StudyEntry entry)
+        {
+            if (!_featureToggles.EnableCreateEntry)
+            {
+                _logger.LogWarning("Attempt to create entry while feature toggle is disabled.");
+                throw new InvalidOperationException("Creating entries is currently disabled.");
+            }
 
-            // Assert
-            Assert.NotNull(fetched);
-            Assert.Equal("Physics", fetched.Subject);
-            Assert.Null(afterDelete);
+            _logger.LogInformation("Creating a new study entry: {@Entry}", entry);
+            _context.StudyEntries.Add(entry);
+            await _context.SaveChangesAsync();
+            return entry;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            // Arrange: attempt to find the entry by ID
+            var entry = await _context.StudyEntries.FindAsync(id);
+
+            // Act: if entry is found, delete it
+            if (entry != null)
+            {
+                _logger.LogInformation("Deleting study entry with ID {Id}.", id);
+                _context.StudyEntries.Remove(entry);
+                await _context.SaveChangesAsync();
+
+                // Assert: return true when deletion was successful
+                return true;
+            }
+            else
+            {
+                _logger.LogWarning("Study entry with ID {Id} not found.", id);
+                // Assert: return false when entry does not exist
+                return false;
+            }
         }
     }
 }

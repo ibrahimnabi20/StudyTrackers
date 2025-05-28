@@ -1,4 +1,5 @@
 {
   "EnableStudyStats": true,
-  "EnableAdvancedExport": false
+  "EnableAdvancedExport": false,
+  "EnableCreateEntry": true
 }

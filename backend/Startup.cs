@@ -47,8 +47,8 @@ namespace StudyTracker
             var toggleJson = File.ReadAllText(togglePath);
             var featureToggles = JsonSerializer.Deserialize<FeatureToggles>(toggleJson);
 
-            services.AddSingleton(featureToggles); // ← gammel model (manuel JSON)
-            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles")); // ← til ILogger
+            services.AddSingleton(featureToggles); // 
+            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles")); //  til ILogger
             services.AddLogging();
         }
 

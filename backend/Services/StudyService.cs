@@ -47,7 +47,7 @@ namespace StudyTracker.Services
             return entry;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entry = await _context.StudyEntries.FindAsync(id);
             if (entry != null)
@@ -55,11 +55,11 @@ namespace StudyTracker.Services
                 _logger.LogInformation("Deleting study entry with ID {Id}.", id);
                 _context.StudyEntries.Remove(entry);
                 await _context.SaveChangesAsync();
+                return true;
             }
-            else
-            {
-                _logger.LogWarning("Study entry with ID {Id} not found.", id);
-            }
+
+            _logger.LogWarning("Study entry with ID {Id} not found.", id);
+            return false;
         }
     }
 }
