@@ -55,6 +55,13 @@ jobs:
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
+      - name: Check coverage report directory
+        run: |
+          if [ ! -d "coverage-report" ]; then
+            echo "coverage-report directory not found!"
+            exit 1
+          fi
+
       - name: End SonarQube analysis
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
