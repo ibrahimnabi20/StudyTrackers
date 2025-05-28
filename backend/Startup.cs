@@ -1,4 +1,3 @@
-﻿
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using StudyTracker.Data;
 using StudyTracker.Services;
 using StudyTracker.Models;
-using System.Text.Json;
 
 namespace StudyTracker
 {
@@ -27,33 +25,26 @@ namespace StudyTracker
         {
             services.AddControllers();
 
-            // Register EF Core with MariaDB
             services.AddDbContext<StudyDbContext>(options =>
                 options.UseMySql(
                     Configuration.GetConnectionString("DefaultConnection"),
                     ServerVersion.AutoDetect(Configuration.GetConnectionString("DefaultConnection"))
                 ));
 
-            // Register services
             services.AddScoped<IStudyService, StudyService>();
 
-            // Register CORS policy
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", builder =>
                     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             });
 
-            // Register Swagger
             services.AddSwaggerGen();
 
-            // Load feature toggles from JSON file
-            var togglePath = Path.Combine(_env.ContentRootPath, "FeatureToggles", "toggles.json");
-            var toggleJson = File.ReadAllText(togglePath);
-            var featureToggles = JsonSerializer.Deserialize<FeatureToggles>(toggleJson);
+            // REGISTER feature toggles using IOptions pattern
+            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles"));
 
-            // Register feature toggles in DI container
-            services.AddSingleton(featureToggles);
+            services.AddLogging();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -2,48 +2,94 @@ name: CI Build & Test
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["main", "master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["main", "master"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install .NET tools (SonarScanner + ReportGenerator)
+      - name: Install dependencies
+        run: dotnet restore StudyTrackers.sln
+
+      - name: Build solution
+        run: dotnet build StudyTrackers.sln --no-restore
+
+      - name: Run unit tests with coverage
+        run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
+
+      - name: Install ReportGenerator
+        run: dotnet tool update --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: reportgenerator -reports:"tests/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Cobertura
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool update --global dotnet-sonarscanner
+
+      - name: Add .dotnet tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Begin SonarQube analysis
         run: |
-          dotnet new tool-manifest --force
-          dotnet tool install dotnet-sonarscanner
-          dotnet tool install dotnet-reportgenerator-globaltool
-      - name: Start SonarQube analysis
-        run: |
-          dotnet tool run dotnet-sonarscanner begin \
+          dotnet sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
-      - name: Restore and Build
-        run: |
-          dotnet restore StudyTrackers.sln
-          dotnet build StudyTrackers.sln --no-restore
-      - name: Run tests with coverage
-        run: |
-          dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" \
-            --results-directory tests/UnitTests/TestResults
-      - name: Generate coverage report
-        run: |
-          dotnet tool run reportgenerator \
-            -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
-            -targetdir:"coverage-report" \
-            -reporttypes:"Cobertura"
+
+      - name: Rebuild for SonarQube context
+        run: dotnet build StudyTrackers.sln
+
       - name: End SonarQube analysis
-        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Install Node.js for frontend testing
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Playwright
+        run: |
+          cd frontend
+          npm install
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: |
+          cd frontend
+          npm install
+          npm run dev &
+          npx wait-on http://localhost:5179
+          npx playwright test
+
+      - name: Run mutation tests with Stryker
+        run: |
+          cd backend
+          dotnet new tool-manifest --force
+          dotnet tool install dotnet-stryker
+          dotnet tool run stryker --reporters "['html', 'progress']"
+
+      - name: Archive mutation test reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: Mutation-Reports
+          path: backend/StrykerOutput
+
+      - name: Track historical versions
+        run: |
+          echo "v$(date +'%Y.%m.%d-%H%M')" >> version.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add version.txt
+          git commit -m "CI: track version"
+          git push || echo "No changes to commit."

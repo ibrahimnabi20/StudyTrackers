@@ -7,20 +7,28 @@ function StudyForm({ onNewEntry }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const response = await fetch('http://localhost:5000/api/study', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subject,
-                durationInMinutes: parseInt(duration)
-            })
-        });
+        try {
+            const response = await fetch('/api/study', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject,
+                    durationInMinutes: parseInt(duration),
+                }),
+            });
 
-        if (response.ok) {
+            if (!response.ok) {
+                throw new Error('Failed to save entry');
+            }
+
             const data = await response.json();
             onNewEntry(data);
             setSubject('');
             setDuration('');
+        } catch (error) {
+            console.error('Error adding study entry:', error);
         }
     };
 

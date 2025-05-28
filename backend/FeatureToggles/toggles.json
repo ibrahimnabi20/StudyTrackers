@@ -1,4 +1,7 @@
 {
-  "EnableStudyStats": true,
-  "EnableAdvancedExport": false
+  "FeatureToggles": {
+    "EnableCreateEntry": true,
+    "EnableStudyStats": true,
+    "EnableAdvancedExport": false
+  }
 }
