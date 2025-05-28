@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import StudyForm from './components/StudyForm'
-import { fetchStudyEntries } from './api'
+import React, { useEffect, useState } from 'react';
+import StudyForm from './components/StudyForm';
+import { fetchStudyEntries } from './api';
 
 function App() {
-    const [entries, setEntries] = useState([])
+    const [entries, setEntries] = useState([]);
 
     useEffect(() => {
-        fetchStudyEntries().then(data => setEntries(data))
-    }, [])
+        fetchStudyEntries().then(data => setEntries(data));
+    }, []);
 
     return (
         <div className="container py-5">
@@ -22,24 +22,19 @@ function App() {
             {entries.length === 0 ? (
                 <p className="text-muted">No entries yet...</p>
             ) : (
-                <ul className="list-group">
+                <ul className="list-group" data-testid="entry-list">
                     {entries.map(entry => (
-                        <li
-                            key={entry.id}
-                            className="list-group-item"
-                            data-testid="study-entry"
-                        >
+                        <li key={entry.id} data-testid="study-entry" className="list-group-item">
                             <strong>{entry.subject}</strong> — {entry.durationInMinutes} minutes
                             <span className="text-muted float-end">
-        {new Date(entry.timestamp).toLocaleString()}
-      </span>
+                {new Date(entry.timestamp).toLocaleString()}
+              </span>
                         </li>
                     ))}
                 </ul>
-
             )}
         </div>
-    )
+    );
 }
 
-export default App
+export default App;

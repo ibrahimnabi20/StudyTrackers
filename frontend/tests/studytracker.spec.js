@@ -10,10 +10,11 @@ test('should add a study entry', async ({ page }) => {
     await expect(subjectInput).toBeVisible({ timeout: 5000 });
     await expect(durationInput).toBeVisible({ timeout: 5000 });
 
+    // Fill out the form
     await subjectInput.fill('Math');
     await durationInput.fill('45');
     await addButton.click();
 
-    const newEntry = page.getByTestId('study-entry').first();
-    await expect(newEntry).toContainText('Math');
+    // Wait for the new entry to appear
+    await expect(page.getByTestId('study-entry').first()).toContainText('Math');
 });
