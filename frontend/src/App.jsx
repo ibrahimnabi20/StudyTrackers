@@ -24,14 +24,19 @@ function App() {
             ) : (
                 <ul className="list-group">
                     {entries.map(entry => (
-                        <li key={entry.id} className="list-group-item">
+                        <li
+                            key={entry.id}
+                            className="list-group-item"
+                            data-testid="study-entry"
+                        >
                             <strong>{entry.subject}</strong> — {entry.durationInMinutes} minutes
                             <span className="text-muted float-end">
-                {new Date(entry.timestamp).toLocaleString()}
-              </span>
+        {new Date(entry.timestamp).toLocaleString()}
+      </span>
                         </li>
                     ))}
                 </ul>
+
             )}
         </div>
     )
