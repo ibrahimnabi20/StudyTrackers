@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Create tool manifest (if needed)
-        run: dotnet new tool-manifest || true
+        run: dotnet new tool-manifest --force
 
       - name: Install SonarScanner & ReportGenerator
         run: |
@@ -34,7 +34,7 @@ jobs:
         run: |
           dotnet tool run dotnet-sonarscanner begin \
             /k:"StudyTracker" \
-            /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
+            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
@@ -45,10 +45,11 @@ jobs:
         run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage"
 
       - name: Generate coverage report
-        run: dotnet tool run reportgenerator \
-          -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
-          -targetdir:"coverage-report" \
-          -reporttypes:"Cobertura"
+        run: |
+          dotnet tool run reportgenerator \
+            -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"coverage-report" \
+            -reporttypes:"Cobertura"
 
       - name: End SonarQube analysis
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
@@ -67,6 +68,15 @@ jobs:
         run: |
           cd frontend
           npx playwright install --with-deps
+
+      - name: Start frontend server
+        run: |
+          cd frontend & npm run dev &
+        shell: bash
+
+      - name: Wait for frontend to be ready
+        run: |
+          sleep 10
 
       - name: Run Playwright tests
         run: |
