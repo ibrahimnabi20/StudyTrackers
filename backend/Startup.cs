@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using StudyTracker.Data;
 using StudyTracker.Services;
 using StudyTracker.Models;
+using System.Text.Json;
 
 namespace StudyTracker
 {
@@ -41,9 +42,13 @@ namespace StudyTracker
 
             services.AddSwaggerGen();
 
-            // REGISTER feature toggles using IOptions pattern
-            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles"));
+            // Load feature toggles fra JSON-fil
+            var togglePath = Path.Combine(_env.ContentRootPath, "FeatureToggles", "toggles.json");
+            var toggleJson = File.ReadAllText(togglePath);
+            var featureToggles = JsonSerializer.Deserialize<FeatureToggles>(toggleJson);
 
+            services.AddSingleton(featureToggles); // ← gammel model (manuel JSON)
+            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles")); // ← til ILogger
             services.AddLogging();
         }
 

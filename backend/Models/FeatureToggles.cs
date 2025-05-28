@@ -2,8 +2,6 @@
 {
     public class FeatureToggles
     {
-        public bool EnableCreateEntry { get; set; } = true;
-        public bool EnableStudyStats { get; set; } = true;
-        public bool EnableAdvancedExport { get; set; } = false;
-    }
-}
+        public bool EnableStudyStats { get; set; }
+        public bool EnableAdvancedExport { get; set; }
+        public bool EnableCreateEntry { get; set; }
