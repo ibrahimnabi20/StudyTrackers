@@ -1,1 +1,17 @@
-Placeholder for StudyTracker/stryker-config.json
+{
+  "stryker-config": {
+    "project": "backend/StudyTracker.csproj",
+    "test-projects": [ "tests/UnitTests/UnitTests.csproj" ],
+    "solution": "StudyTrackers.sln",
+    "reporters": [ "html", "progress" ],
+    "coverage-analysis": "perTest",
+    "thresholds": {
+      "high": 90,
+      "low": 80,
+      "break": 70
+    },
+    "concurrency": 1,
+    "mutate": [ "!**/Migrations/*", "**/*.cs" ],
+    "language-version": "latest"
+  }
+}

@@ -2,17 +2,10 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "dotnet-sonarscanner": {
-      "version": "10.1.2",
+    "dotnet-stryker": {
+      "version": "4.5.1",
       "commands": [
-        "dotnet-sonarscanner"
-      ],
-      "rollForward": false
-    },
-    "dotnet-reportgenerator-globaltool": {
-      "version": "5.4.7",
-      "commands": [
-        "reportgenerator"
+        "dotnet-stryker"
       ],
       "rollForward": false
     }
