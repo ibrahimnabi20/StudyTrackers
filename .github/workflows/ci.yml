@@ -2,9 +2,9 @@ name: CI Build & Test
 
 on:
   push:
-    branches: [ "master", "main" ]
+    branches: ["master", "main"]
   pull_request:
-    branches: [ "master", "main" ]
+    branches: ["master", "main"]
 
 jobs:
   build:
@@ -69,14 +69,22 @@ jobs:
           cd frontend
           npx playwright install --with-deps
 
-      - name: Start frontend server
+      - name: Build frontend
         run: |
-          cd frontend & npm run dev &
+          cd frontend
+          npm run build
+
+      - name: Start preview server
+        run: |
+          cd frontend
+          nohup npm run preview -- --port 5179 &
         shell: bash
 
       - name: Wait for frontend to be ready
         run: |
-          sleep 10
+          sudo apt-get update && sudo apt-get install -y curl
+          sleep 5
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:5179
 
       - name: Run Playwright tests
         run: |
