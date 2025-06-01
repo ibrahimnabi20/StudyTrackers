@@ -1,3 +1,5 @@
+using System;
+
 namespace StudyTracker.Models
 {
     public class StudyEntry
@@ -6,8 +8,5 @@ namespace StudyTracker.Models
         public string? Subject { get; set; }
         public int DurationInMinutes { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.Now;
-        
-
-
     }
 }

@@ -1204,14 +1204,13 @@
           "Microsoft.EntityFrameworkCore": "8.0.3",
           "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
           "Microsoft.Extensions.Options": "8.0.0",
-          "Microsoft.NET.Test.Sdk": "17.9.0",
           "Pomelo.EntityFrameworkCore.MySql": "8.0.0",
-          "Swashbuckle.AspNetCore": "6.5.0",
-          "xunit": "2.5.0"
+          "Swashbuckle.AspNetCore": "6.5.0"
         },
         "runtime": {
           "StudyTracker.dll": {
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       }
