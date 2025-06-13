@@ -1,74 +1,244 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 using StudyTracker.Data;
 using StudyTracker.Models;
+using StudyTracker.Services;
+using Xunit;
+using Microsoft.EntityFrameworkCore;
 
-namespace StudyTracker.Services
+namespace UnitTests
 {
-    public class StudyService : IStudyService
+    public class StudyServiceTests
     {
-        private readonly StudyDbContext _context;
-        private readonly ILogger<StudyService> _logger;
-        private readonly FeatureToggles _featureToggles;
-
-        public StudyService(StudyDbContext context, ILogger<StudyService> logger, IOptions<FeatureToggles> featureToggles)
+        // Creates a fresh in-memory database for isolated testing
+        private StudyDbContext CreateInMemoryDbContext()
         {
-            _context = context;
-            _logger = logger;
-            _featureToggles = featureToggles.Value;
+            var options = new DbContextOptionsBuilder<StudyDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+            return new StudyDbContext(options);
         }
 
-        public async Task<List<StudyEntry>> GetAllAsync()
+        // Helper method to simulate feature toggles
+        private IOptions<FeatureToggles> CreateFeatureToggles(bool enabled = true)
         {
-            _logger.LogInformation("Fetching all study entries from the database.");
-            return await _context.StudyEntries.ToListAsync();
+            return Options.Create(new FeatureToggles { EnableCreateEntry = enabled });
         }
 
-        public async Task<StudyEntry?> GetByIdAsync(int id)
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllEntries_AndLog()
         {
-            _logger.LogInformation("Fetching study entry with ID {Id}.", id);
-            return await _context.StudyEntries.FindAsync(id);
+            // Arrange
+            var context = CreateInMemoryDbContext();
+            context.StudyEntries.Add(new StudyEntry { Subject = "Test1", DurationInMinutes = 30 });
+            await context.SaveChangesAsync();
+
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            // Act
+            var result = await service.GetAllAsync();
+
+            // Assert
+            Assert.Single(result); // Only one entry added above
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Fetching all study entries from the database")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once); // Verifies logging happened
         }
 
-        public async Task<StudyEntry> CreateAsync(StudyEntry entry)
+        [Fact]
+        public async Task GetByIdAsync_ShouldReturnCorrectEntry_AndLog()
         {
-            if (!_featureToggles.EnableCreateEntry)
+            var context = CreateInMemoryDbContext();
+            context.StudyEntries.Add(new StudyEntry { Id = 1, Subject = "Test2", DurationInMinutes = 45 });
+            await context.SaveChangesAsync();
+
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var result = await service.GetByIdAsync(1);
+
+            Assert.NotNull(result);
+            Assert.Equal("Test2", result.Subject);
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Fetching study entry with ID")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldAddEntry_AndLog()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var entry = new StudyEntry { Subject = "TestCreate", DurationInMinutes = 25 };
+            var result = await service.CreateAsync(entry);
+
+            Assert.NotNull(result);
+            Assert.Single(context.StudyEntries); // Ensure entry is saved
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Creating a new study entry")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateAsync_ShouldThrow_WhenFeatureToggleDisabled()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles(false));
+            var entry = new StudyEntry { Subject = "ShouldFail" };
+
+            // Act + Assert: Expect exception when toggle is off
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(entry));
+            Assert.Equal("Creating entries is currently disabled.", ex.Message);
+
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Attempt to create entry while feature toggle is disabled")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ShouldRemoveEntry_AndLog()
+        {
+            var context = CreateInMemoryDbContext();
+            context.StudyEntries.Add(new StudyEntry { Id = 1, Subject = "DeleteTest" });
+            await context.SaveChangesAsync();
+
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var result = await service.DeleteAsync(1);
+
+            Assert.True(result);
+            Assert.Empty(context.StudyEntries); // Verify entry is removed
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Deleting study entry with ID")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ShouldUpdateFields_AndLog()
+        {
+            var context = CreateInMemoryDbContext();
+            context.StudyEntries.Add(new StudyEntry { Id = 1, Subject = "Old", DurationInMinutes = 10, Timestamp = DateTime.UtcNow });
+            await context.SaveChangesAsync();
+
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var updatedEntry = new StudyEntry { Id = 1, Subject = "New", DurationInMinutes = 20, Timestamp = DateTime.UtcNow.AddMinutes(10) };
+            var result = await service.UpdateAsync(updatedEntry);
+
+            Assert.True(result);
+            var entry = await context.StudyEntries.FindAsync(1);
+            Assert.Equal("New", entry.Subject);
+            Assert.Equal(20, entry.DurationInMinutes);
+
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Updating study entry with ID")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ShouldReturnFalse_AndLogWarning_IfNotFound()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var updatedEntry = new StudyEntry { Id = 999, Subject = "NoMatch" };
+            var result = await service.UpdateAsync(updatedEntry);
+
+            Assert.False(result); // Entry doesn't exist
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Attempted to update non-existent entry with ID")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ShouldActuallyPersistChangeToDatabase()
+        {
+            var context = CreateInMemoryDbContext();
+            var entry = new StudyEntry
             {
-                _logger.LogWarning("Attempt to create entry while feature toggle is disabled.");
-                throw new InvalidOperationException("Creating entries is currently disabled.");
-            }
+                Id = 1,
+                Subject = "Original",
+                DurationInMinutes = 20,
+                Timestamp = DateTime.UtcNow
+            };
 
-            _logger.LogInformation("Creating a new study entry: {@Entry}", entry);
-            _context.StudyEntries.Add(entry);
-            await _context.SaveChangesAsync();
-            return entry;
-        }
+            context.StudyEntries.Add(entry);
+            await context.SaveChangesAsync();
 
-        public async Task<bool> DeleteAsync(int id)
-        {
-            // Arrange: attempt to find the entry by ID
-            var entry = await _context.StudyEntries.FindAsync(id);
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
 
-            // Act: if entry is found, delete it
-            if (entry != null)
+            var updated = new StudyEntry
             {
-                _logger.LogInformation("Deleting study entry with ID {Id}.", id);
-                _context.StudyEntries.Remove(entry);
-                await _context.SaveChangesAsync();
+                Id = 1,
+                Subject = "Changed",
+                DurationInMinutes = 99,
+                Timestamp = DateTime.UtcNow.AddMinutes(5)
+            };
 
-                // Assert: return true when deletion was successful
-                return true;
-            }
-            else
-            {
-                _logger.LogWarning("Study entry with ID {Id} not found.", id);
-                // Assert: return false when entry does not exist
-                return false;
-            }
+            var result = await service.UpdateAsync(updated);
+
+            Assert.True(result);
+
+            var reloaded = await context.StudyEntries.FindAsync(1);
+            Assert.Equal("Changed", reloaded.Subject);
+            Assert.Equal(99, reloaded.DurationInMinutes);
+
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Updating study entry with ID")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
         }
     }
 }

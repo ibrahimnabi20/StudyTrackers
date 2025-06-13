@@ -11,7 +11,13 @@
       "break": 70
     },
     "concurrency": 1,
-    "mutate": [ "!**/Migrations/*", "**/*.cs" ],
-    "language-version": "latest"
+    "language-version": "latest",
+    "mutate": [
+      "**/*.cs",
+      "!**/Startup.cs",
+      "!**/Program.cs",
+      "!**/Migrations/**",
+      "!**/Models/StudyEntry.cs"
+    ]
   }
 }

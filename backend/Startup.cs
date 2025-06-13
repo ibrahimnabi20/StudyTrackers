@@ -10,7 +10,6 @@ using StudyTracker.Models;
 using System.Text.Json;
 using System.IO;
 
-
 namespace StudyTracker
 {
     public class Startup
@@ -44,13 +43,11 @@ namespace StudyTracker
 
             services.AddSwaggerGen();
 
-            // Load feature toggles fra JSON-fil
-            var togglePath = Path.Combine(_env.ContentRootPath, "FeatureToggles", "toggles.json");
-            var toggleJson = File.ReadAllText(togglePath);
-            var featureToggles = JsonSerializer.Deserialize<FeatureToggles>(toggleJson);
+   
+            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles"));
 
-            services.AddSingleton(featureToggles); // 
-            services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles")); //  til ILogger
+          
+
             services.AddLogging();
         }
 
