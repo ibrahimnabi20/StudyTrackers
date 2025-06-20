@@ -1,54 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StudyTracker.Data;
 using StudyTracker.Models;
 
 namespace StudyTracker.Services
 {
-    public class StudyStatsService
+    // Hvis du ønsker et interface, tilføj det:
+    public interface IStudyStatsService
     {
-        private readonly ApplicationDbContext _context;
+        Task<StudyStatsResult> CalculateStatsAsync(CancellationToken cancellationToken);
+    }
+
+    public class StudyStatsService : IStudyStatsService
+    {
+        private readonly StudyDbContext _context;
         private readonly ILogger<StudyStatsService> _logger;
 
-        public StudyStatsService(ApplicationDbContext context, ILogger<StudyStatsService> logger)
+        public StudyStatsService(StudyDbContext context, ILogger<StudyStatsService> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        public Task<StudyStatsResult> CalculateStatsAsync()
+        public async Task<StudyStatsResult> CalculateStatsAsync(CancellationToken cancellationToken)
         {
-            var entries = _context.StudyEntries.ToList();
+            _logger.LogInformation("Calculating study statistics...");
 
-            if (!entries.Any())
+            // Hent alle entries asynkront
+            var entries = await _context.StudyEntries
+                                        .AsNoTracking()
+                                        .ToListAsync(cancellationToken);
+
+            if (entries.Count == 0)
             {
                 _logger.LogInformation("No study entries found when calculating statistics.");
-                return Task.FromResult(new StudyStatsResult());
+                return new StudyStatsResult();
             }
 
-            var totalMinutes = entries.Sum(e => e.DurationInMinutes);
+            var totalMinutes    = entries.Sum(e => e.DurationInMinutes);
             var averageDuration = entries.Average(e => e.DurationInMinutes);
 
             var perSubject = entries
                 .GroupBy(e => e.Subject)
                 .Select(g => new SubjectStats
                 {
-                    Subject = g.Key,
-                    SessionCount = g.Count(),
+                    Subject         = g.Key,
+                    SessionCount    = g.Count(),
                     AverageDuration = g.Average(e => e.DurationInMinutes)
-                }).ToList();
+                })
+                .ToList();
 
             _logger.LogInformation("Statistics calculated successfully for {Count} entries.", entries.Count);
 
-            return Task.FromResult(new StudyStatsResult
+            return new StudyStatsResult
             {
-                TotalMinutes = totalMinutes,
+                TotalMinutes    = totalMinutes,
                 AverageDuration = averageDuration,
-                PerSubject = perSubject
-            });
+                PerSubject      = perSubject
+            };
         }
     }
 
