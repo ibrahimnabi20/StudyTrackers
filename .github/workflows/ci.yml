@@ -75,7 +75,8 @@ jobs:
           zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
 
       - name: Upload ZIP as artifact
-        uses: actions/upload-artifact@v3
+        # <-- Ændret fra v3 til v4 herunder:
+        uses: actions/upload-artifact@v4
         with:
           name: StudyTrackers-${{ github.run_number }}
           path: StudyTrackers_${{ github.run_number }}.zip
