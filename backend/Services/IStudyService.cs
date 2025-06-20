@@ -7,10 +7,10 @@ namespace StudyTracker.Services
 {
     public interface IStudyService
     {
-        Task<List<StudyEntry>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task<StudyEntry?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-        Task<StudyEntry> CreateAsync(StudyEntry entry, CancellationToken cancellationToken = default);
-        Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
-        Task<bool> UpdateAsync(StudyEntry entry, CancellationToken cancellationToken = default);
+        Task<List<StudyEntry>> GetAllAsync(CancellationToken cancellationToken);
+        Task<StudyEntry?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<StudyEntry> CreateAsync(StudyEntry entry, CancellationToken cancellationToken);
+        Task<bool> DeleteAsync(int id, CancellationToken cancellationToken);
+        Task<bool> UpdateAsync(StudyEntry updatedEntry, CancellationToken cancellationToken);
     }
 }

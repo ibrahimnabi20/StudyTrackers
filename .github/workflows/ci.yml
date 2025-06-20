@@ -1,4 +1,4 @@
-name: CI Build & Test
+name: CI/CD Build & Release
 
 on:
   push:
@@ -7,43 +7,75 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-test-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install .NET tools (SonarScanner + ReportGenerator)
+      - name: Install .NET tools
         run: |
           dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
           dotnet tool install dotnet-reportgenerator-globaltool
-      - name: Start SonarQube analysis
+          dotnet tool install dotnet-stryker
+          dotnet tool install dotnet-ef
+
+      - name: Begin SonarQube analysis
         run: |
           dotnet tool run dotnet-sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
+
       - name: Restore and Build
         run: |
           dotnet restore StudyTrackers.sln
-          dotnet build StudyTrackers.sln --no-restore
-      - name: Run tests with coverage
+          dotnet build StudyTrackers.sln --configuration Release --no-restore
+
+      - name: Run unit tests with coverage
         run: |
-          dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" \
+          dotnet test tests/UnitTests/UnitTests.csproj --no-build --collect:"XPlat Code Coverage" \
             --results-directory tests/UnitTests/TestResults
+
       - name: Generate coverage report
         run: |
           dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
+
+      - name: Apply EF Core migrations (CD)
+        run: |
+          dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
+
       - name: End SonarQube analysis
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Run mutation tests
+        run: dotnet tool run dotnet-stryker
+
+      - name: Auto-increment version.txt
+        run: |
+          VERSION_FILE=version.txt
+          OLD_VERSION=$(cat $VERSION_FILE)
+          NEW_VERSION=$(date +'%Y.%m.%d.%H%M')
+          echo "$NEW_VERSION" > $VERSION_FILE
+          echo "Updated version.txt from $OLD_VERSION to $NEW_VERSION"
+
+      - name: Create ZIP release
+        run: |
+          zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
+
+      - name: Upload ZIP as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: StudyTrackers-${{ github.run_number }}
+          path: StudyTrackers_${{ github.run_number }}.zip

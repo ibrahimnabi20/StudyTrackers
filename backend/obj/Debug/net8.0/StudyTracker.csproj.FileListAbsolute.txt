@@ -23,6 +23,7 @@ C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.exe
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.dll
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.pdb
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Humanizer.dll
+C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll

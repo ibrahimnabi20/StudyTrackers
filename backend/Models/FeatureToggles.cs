@@ -5,6 +5,6 @@
         public bool EnableStudyStats { get; set; }
         public bool EnableAdvancedExport { get; set; }
         public bool EnableCreateEntry { get; set; }
-        public bool EnableStudyTracking { get; set; } 
+        public bool EnableStudyTracking { get; set; }
     }
 }
