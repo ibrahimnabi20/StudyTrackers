@@ -40,9 +40,11 @@ jobs:
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --configuration Release --no-restore
 
-      - name: Run unit tests with coverage
+      - name: Run tests & collect coverage
         run: |
-          dotnet test tests/UnitTests/UnitTests.csproj --no-build --collect:"XPlat Code Coverage" \
+          dotnet test StudyTrackers.sln \
+            --configuration Release \
+            --collect:"XPlat Code Coverage" \
             --results-directory tests/UnitTests/TestResults
 
       - name: Generate coverage report
@@ -52,7 +54,7 @@ jobs:
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
-      - name: Apply EF Core migrations (CD)
+      - name: Apply EF Core migrations
         run: |
           dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
 
@@ -75,7 +77,6 @@ jobs:
           zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
 
       - name: Upload ZIP as artifact
-        # <-- Ændret fra v3 til v4 herunder:
         uses: actions/upload-artifact@v4
         with:
           name: StudyTrackers-${{ github.run_number }}
