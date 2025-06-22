@@ -7,15 +7,12 @@ on:
     branches: [ "master" ]
 
 env:
-  # Din container registry (GitHub Container Registry som eksempel)
   REGISTRY: ghcr.io
-  # <owner>/<repo> i lowercase
-  IMAGE_NAME: ibrahimnabi20/studytrackers
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-test-quality:
     runs-on: ubuntu-latest
-
     services:
       mysql:
         image: mariadb:10.5
@@ -25,9 +22,9 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
-          --health-interval=10s 
-          --health-timeout=5s 
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
+          --health-interval=10s
+          --health-timeout=5s
           --health-retries=5
 
     env:
@@ -73,13 +70,14 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          reportgenerator \
+          dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
       - name: Apply EF Core migrations
-        run: dotnet ef database update --project backend/StudyTracker.csproj
+        run: |
+          dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
 
       - name: End SonarQube analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
@@ -104,19 +102,11 @@ jobs:
   docker-build-push:
     needs: build-test-quality
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & Push Docker image
+      - name: Build & push Docker image
         uses: docker/build-push-action@v4
         with:
           context: ./backend
@@ -125,3 +115,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          # login til registry
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
