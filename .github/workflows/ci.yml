@@ -1,5 +1,10 @@
 name: CI/CD Build, Test, Quality & Docker
 
+
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ "master" ]
@@ -8,7 +13,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # Sørg for at repo-navnet bliver lowercase
   IMAGE_NAME: ${{ github.repository_owner }}/studytrackers
 
 jobs:
@@ -61,7 +65,7 @@ jobs:
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --configuration Release --no-restore
 
-      - name: Run tests & collect coverage
+      - name: Run unit tests & collect coverage
         run: |
           dotnet test StudyTrackers.sln \
             --configuration Release \
