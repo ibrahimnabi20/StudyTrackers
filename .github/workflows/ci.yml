@@ -80,12 +80,7 @@ jobs:
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Run mutation tests
-        run: |
-          dotnet tool run dotnet-stryker \
-            --project backend/StudyTracker.csproj \
-            --test-project backend/tests/UnitTests/UnitTests.csproj \
-            --solution StudyTrackers.sln \
-            --config-file stryker-config.json
+        run: dotnet tool run dotnet-stryker -- --config-file stryker-config.json
 
       - name: Auto-increment version.txt
         run: |

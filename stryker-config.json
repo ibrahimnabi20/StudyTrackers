@@ -2,7 +2,7 @@
   "stryker-config": {
     "project": "backend/StudyTracker.csproj",
     "test-projects": [
-      "backend/tests/UnitTests/UnitTests.csproj"
+      "tests/UnitTests/UnitTests.csproj"
     ],
     "solution": "StudyTrackers.sln",
     "reporters": [
