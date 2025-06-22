@@ -19,9 +19,9 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
-          --health-interval=10s 
-          --health-timeout=5s 
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
+          --health-interval=10s
+          --health-timeout=5s
           --health-retries=5
 
     env:
@@ -80,8 +80,7 @@ jobs:
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Run mutation tests
-        run: |
-          dotnet tool run dotnet-stryker -- --config-file stryker-config.json
+        run: dotnet tool run dotnet-stryker -- --config-file stryker-config.json
 
       - name: Auto-increment version.txt
         run: |
