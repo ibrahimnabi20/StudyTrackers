@@ -1,15 +1,14 @@
 name: CI/CD Build, Test, Quality & Docker
 
-
 permissions:
   contents: read
   packages: write
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
 
 env:
   REGISTRY: ghcr.io
@@ -18,6 +17,7 @@ env:
 jobs:
   build-test-quality:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mariadb:10.5
@@ -33,18 +33,23 @@ jobs:
           --health-retries=5
 
     env:
-      ConnectionStrings__DefaultConnection: "server=127.0.0.1;port=3306;database=studytrackerdb;user=root;password=mypassword;"
+      ConnectionStrings__DefaultConnection: >
+        server=127.0.0.1;
+        port=3306;
+        database=studytrackerdb;
+        user=root;
+        password=mypassword;
 
     steps:
-      - uses: actions/checkout@v3
-        name: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-dotnet@v3
-        name: Setup .NET 8 SDK
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install global tools
+      - name: Install global .NET tools
         run: |
           dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
@@ -52,15 +57,15 @@ jobs:
           dotnet tool install dotnet-stryker
           dotnet tool install dotnet-ef
 
-      - name: Begin SonarQube analysis
+      - name: SonarQube begin analysis
         run: |
-          dotnet tool run dotnet-sonarscanner begin \
+          dotnet sonarscanner begin \
             /k:"StudyTracker" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Restore & Build
+      - name: Restore & build solution
         run: |
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --configuration Release --no-restore
@@ -81,14 +86,13 @@ jobs:
             -reporttypes:"Cobertura"
 
       - name: Apply EF Core migrations
-        run: |
-          dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
+        run: dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
 
-      - name: End SonarQube analysis
-        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: SonarQube end analysis
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Mutation testing (Stryker)
-        run: dotnet tool run dotnet-stryker -- --config-file stryker-config.json
+        run: dotnet stryker --config-file stryker-config.json
 
       - name: Package ZIP artifact
         run: |
@@ -98,8 +102,8 @@ jobs:
           echo "$NEW" > $VERSION_FILE
           zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
 
-      - uses: actions/upload-artifact@v4
-        name: Upload ZIP artifact
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
         with:
           name: StudyTrackers-${{ github.run_number }}
           path: StudyTrackers_${{ github.run_number }}.zip
@@ -107,9 +111,17 @@ jobs:
   docker-build-push:
     needs: build-test-quality
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-        name: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push Docker image
         uses: docker/build-push-action@v4
@@ -120,4 +132,3 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
