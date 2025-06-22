@@ -1,12 +1,14 @@
-C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\appsettings.json
-C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\FeatureToggles\toggles.json
-C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Logging\logging.json
-C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.staticwebassets.endpoints.json
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.deps.json
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.runtimeconfig.json
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.AssemblyInfoInputs.cache
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.AssemblyInfo.cs
+C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTra.744FBDF2.Up2Date
+C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.genruntimeconfig.cache
+C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\appsettings.json
+C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\FeatureToggles\toggles.json
+C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\Logging\logging.json
+C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.staticwebassets.endpoints.json
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\scopedcss\bundle\StudyTracker.styles.css
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\staticwebassets.development.json
@@ -17,8 +19,6 @@ C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\staticwebassets\
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.StudyTracker.props
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.StudyTracker.props
 C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\staticwebassets.pack.json
-C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTra.744FBDF2.Up2Date
-C:\Users\ibrah\Downloads\StudyTrackers\backend\obj\Debug\net8.0\StudyTracker.genruntimeconfig.cache
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.exe
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.dll
 C:\Users\ibrah\Downloads\StudyTrackers\backend\bin\Debug\net8.0\StudyTracker.pdb

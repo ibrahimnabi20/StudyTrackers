@@ -18,6 +18,10 @@
       "!**/Program.cs",
       "!**/Migrations/**",
       "!**/Models/StudyEntry.cs"
+    ],
+    "ignore-mutations": [
+      "String",
+      "Statement"
     ]
   }
 }

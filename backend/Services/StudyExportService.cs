@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Services/StudyExportService.cs
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -9,7 +9,7 @@ using StudyTracker.Models;
 
 namespace StudyTracker.Services
 {
-    public class StudyExportService
+    public class StudyExportService : IStudyExportService
     {
         private readonly StudyDbContext _context;
         private readonly ILogger<StudyExportService> _logger;
@@ -20,32 +20,32 @@ namespace StudyTracker.Services
             _logger = logger;
         }
 
-        public string ExportToCsv()
+        public byte[] ExportToCsv()
         {
             var entries = _context.StudyEntries.ToList();
 
             if (!entries.Any())
             {
                 _logger.LogWarning("No study entries found to export.");
-                return string.Empty;
+                return Array.Empty<byte>();
             }
 
             var csv = new StringBuilder();
-            csv.AppendLine("Id,Subject,DurationInMinutes,Date");
+            csv.AppendLine("Id,Subject,DurationInMinutes,Timestamp");
 
-            foreach (var entry in entries)
+            foreach (var e in entries)
             {
                 csv.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
                     "{0},\"{1}\",{2},{3}",
-                    entry.Id,
-                    entry.Subject,
-                    entry.DurationInMinutes,
-                    entry.Date.ToString("yyyy-MM-dd")));
+                    e.Id,
+                    e.Subject,
+                    e.DurationInMinutes,
+                    e.Timestamp.ToString("s")));
             }
 
             _logger.LogInformation("Exported {Count} study entries to CSV.", entries.Count);
-            return csv.ToString();
+            return Encoding.UTF8.GetBytes(csv.ToString());
         }
     }
 }

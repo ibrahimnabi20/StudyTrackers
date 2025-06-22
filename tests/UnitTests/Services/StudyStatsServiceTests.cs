@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using StudyTracker.Data;               
+using StudyTracker.Data;
 using StudyTracker.Models;
 using StudyTracker.Services;
 using Xunit;
@@ -45,37 +45,49 @@ namespace UnitTests.Services
         }
 
         [Fact]
-        public async Task CalculateStatsAsync_ComputesCorrectValues()
+        public async Task CalculateStatsAsync_ComputesCorrectTotals_AndLogs()
         {
             var entries = new List<StudyEntry>
             {
-                new StudyEntry { Id = 1, Subject = "A", DurationInMinutes = 30 },
-                new StudyEntry { Id = 2, Subject = "A", DurationInMinutes = 60 },
-                new StudyEntry { Id = 3, Subject = "B", DurationInMinutes = 45 }
+                new StudyEntry { Id = 1, Subject = "Math", DurationInMinutes = 30 },
+                new StudyEntry { Id = 2, Subject = "Math", DurationInMinutes = 60 },
+                new StudyEntry { Id = 3, Subject = "History", DurationInMinutes = 45 }
             };
-            var service = CreateServiceWithEntries(entries);
+            var mockLogger = new Mock<ILogger<StudyStatsService>>();
+            var context    = CreateInMemoryDbContext();
+            context.StudyEntries.AddRange(entries);
+            context.SaveChanges();
+            var service    = new StudyStatsService(context, mockLogger.Object);
 
             var result = await service.CalculateStatsAsync(CancellationToken.None);
 
-            // Total = 30+60+45 = 135
+            // Total and average
             Assert.Equal(135, result.TotalMinutes);
-            // Average = 135/3 = 45
             Assert.Equal(45, result.AverageDuration);
 
-            // PerSubject: A => (30+60)/2 = 45, B => 45/1 = 45
+            // Per‐subject grouping
             Assert.Collection(result.PerSubject,
-                a =>
+                math =>
                 {
-                    Assert.Equal("A", a.Subject);
-                    Assert.Equal(2, a.SessionCount);
-                    Assert.Equal(45, a.AverageDuration);
+                    Assert.Equal("Math", math.Subject);
+                    Assert.Equal(2, math.SessionCount);
+                    Assert.Equal(45, math.AverageDuration);
                 },
-                b =>
+                hist =>
                 {
-                    Assert.Equal("B", b.Subject);
-                    Assert.Equal(1, b.SessionCount);
-                    Assert.Equal(45, b.AverageDuration);
+                    Assert.Equal("History", hist.Subject);
+                    Assert.Equal(1, hist.SessionCount);
+                    Assert.Equal(45, hist.AverageDuration);
                 });
+
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Statistics calculated successfully")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
         }
     }
 }

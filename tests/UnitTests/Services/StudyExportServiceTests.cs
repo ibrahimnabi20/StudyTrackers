@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -12,54 +13,53 @@ namespace UnitTests.Services
 {
     public class StudyExportServiceTests
     {
-        private StudyDbContext CreateInMemoryDbContext()
+        private StudyDbContext CreateInMemoryDbContext(string dbName)
         {
             var options = new DbContextOptionsBuilder<StudyDbContext>()
-                .UseInMemoryDatabase("TestDb_" + Guid.NewGuid())
+                .UseInMemoryDatabase(dbName)
                 .Options;
             return new StudyDbContext(options);
         }
 
-        private StudyExportService CreateServiceWithEntries(List<StudyEntry> entries)
-        {
-            var context = CreateInMemoryDbContext();
-            context.StudyEntries.AddRange(entries);
-            context.SaveChanges();
-
-            var logger = new Mock<ILogger<StudyExportService>>();
-            return new StudyExportService(context, logger.Object);
-        }
-
         [Fact]
-        public void ExportToCsv_ReturnsEmptyString_WhenNoEntriesExist()
+        public void ExportToCsv_ReturnsEmptyByteArray_WhenNoEntries()
         {
-            var service = CreateServiceWithEntries(new List<StudyEntry>());
+            // Arrange
+            var context = CreateInMemoryDbContext(Guid.NewGuid().ToString());
+            var logger  = Mock.Of<ILogger<StudyExportService>>();
+            var service = new StudyExportService(context, logger);
 
-            // ExportToCsv() returnerer nu en string
-            var csv = service.ExportToCsv();
+            // Act
+            var result = service.ExportToCsv();
 
-            Assert.Equal(string.Empty, csv);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
         }
 
         [Fact]
         public void ExportToCsv_ReturnsCorrectCsv_WhenEntriesExist()
         {
-            var entries = new List<StudyEntry>
+            // Arrange
+            var context = CreateInMemoryDbContext(Guid.NewGuid().ToString());
+            context.StudyEntries.AddRange(new[]
             {
-                new StudyEntry { Id = 1, Subject = "Math",    DurationInMinutes = 60, Date = new DateTime(2024,1,1) },
-                new StudyEntry { Id = 2, Subject = "Science", DurationInMinutes = 45, Date = new DateTime(2024,1,2) }
-            };
+                new StudyEntry { Id = 1, Subject = "Math", DurationInMinutes = 60, Timestamp = new DateTime(2024, 1, 1) },
+                new StudyEntry { Id = 2, Subject = "Science", DurationInMinutes = 45, Timestamp = new DateTime(2024, 1, 2) }
+            });
+            context.SaveChanges();
 
-            var service = CreateServiceWithEntries(entries);
+            var logger  = Mock.Of<ILogger<StudyExportService>>();
+            var service = new StudyExportService(context, logger);
 
-            // Nu returneres en string, så vi behøver ikke byte[] ↔️ string-konvertering
-            var csv = service.ExportToCsv();
+            // Act
+            var bytes = service.ExportToCsv();
+            var csv   = Encoding.UTF8.GetString(bytes);
 
-            // Matcher header
-            Assert.Contains("Id,Subject,DurationInMinutes,Date", csv);
-            // Matcher data-linjer (med anførselstegn omkring Subject)
-            Assert.Contains("1,\"Math\",60,2024-01-01", csv);
-            Assert.Contains("2,\"Science\",45,2024-01-02", csv);
+            // Assert
+            Assert.Contains("Id,Subject,DurationInMinutes,Timestamp", csv);
+            Assert.Contains("1,\"Math\",60,2024-01-01T00:00:00", csv);
+            Assert.Contains("2,\"Science\",45,2024-01-02T00:00:00", csv);
         }
     }
 }

@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using StudyTracker.Data;
 using StudyTracker.Services;
 using StudyTracker.Models;
-using System.Text.Json;
-using System.IO;
 
 namespace StudyTracker
 {
@@ -33,7 +31,10 @@ namespace StudyTracker
                     ServerVersion.AutoDetect(Configuration.GetConnectionString("DefaultConnection"))
                 ));
 
+            // Application services
             services.AddScoped<IStudyService, StudyService>();
+            services.AddScoped<IStudyExportService, StudyExportService>();
+            services.AddScoped<IStudyStatsService, StudyStatsService>();
 
             services.AddCors(options =>
             {
@@ -43,10 +44,8 @@ namespace StudyTracker
 
             services.AddSwaggerGen();
 
-   
+            // Feature toggles from appsettings.json
             services.Configure<FeatureToggles>(Configuration.GetSection("FeatureToggles"));
-
-          
 
             services.AddLogging();
         }
@@ -61,6 +60,7 @@ namespace StudyTracker
             }
 
             app.UseRouting();
+
             app.UseCors("AllowAll");
             app.UseAuthorization();
 

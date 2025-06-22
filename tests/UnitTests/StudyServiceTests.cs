@@ -15,6 +15,7 @@ namespace UnitTests
 {
     public class StudyServiceTests
     {
+        // Creates a fresh in-memory database for isolated testing
         private StudyDbContext CreateInMemoryDbContext()
         {
             var options = new DbContextOptionsBuilder<StudyDbContext>()
@@ -23,9 +24,22 @@ namespace UnitTests
             return new StudyDbContext(options);
         }
 
+        // Helper method to simulate feature toggles
         private IOptions<FeatureToggles> CreateFeatureToggles(bool enabled = true)
         {
             return Options.Create(new FeatureToggles { EnableCreateEntry = enabled });
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoEntries()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var result = await service.GetAllAsync(CancellationToken.None);
+
+            Assert.Empty(result);
         }
 
         [Fact]
@@ -40,7 +54,7 @@ namespace UnitTests
 
             var result = await service.GetAllAsync(CancellationToken.None);
 
-            Assert.Single(result);
+            Assert.Single(result); // Only one entry added above
             mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
@@ -76,6 +90,18 @@ namespace UnitTests
         }
 
         [Fact]
+        public async Task GetByIdAsync_ShouldReturnNull_WhenNotFound()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var result = await service.GetByIdAsync(999, CancellationToken.None);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task CreateAsync_ShouldAddEntry_AndLog()
         {
             var context = CreateInMemoryDbContext();
@@ -86,7 +112,7 @@ namespace UnitTests
             var result = await service.CreateAsync(entry, CancellationToken.None);
 
             Assert.NotNull(result);
-            Assert.Single(context.StudyEntries);
+            Assert.Single(context.StudyEntries); // Ensure entry is saved
             mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
@@ -119,6 +145,18 @@ namespace UnitTests
         }
 
         [Fact]
+        public async Task DeleteAsync_ShouldReturnFalse_WhenNotFound()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var result = await service.DeleteAsync(123, CancellationToken.None);
+
+            Assert.False(result);
+        }
+
+        [Fact]
         public async Task DeleteAsync_ShouldRemoveEntry_AndLog()
         {
             var context = CreateInMemoryDbContext();
@@ -131,12 +169,33 @@ namespace UnitTests
             var result = await service.DeleteAsync(1, CancellationToken.None);
 
             Assert.True(result);
-            Assert.Empty(context.StudyEntries);
+            Assert.Empty(context.StudyEntries); // Verify entry is removed
             mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
                     It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Deleting study entry with ID")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ShouldReturnFalse_AndLogWarning_IfNotFound()
+        {
+            var context = CreateInMemoryDbContext();
+            var mockLogger = new Mock<ILogger<StudyService>>();
+            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
+
+            var updatedEntry = new StudyEntry { Id = 999, Subject = "NoMatch" };
+            var result = await service.UpdateAsync(updatedEntry, CancellationToken.None);
+
+            Assert.False(result);
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Attempted to update non-existent entry with ID")),
                     null,
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -165,27 +224,6 @@ namespace UnitTests
                     LogLevel.Information,
                     It.IsAny<EventId>(),
                     It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Updating study entry with ID")),
-                    null,
-                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task UpdateAsync_ShouldReturnFalse_AndLogWarning_IfNotFound()
-        {
-            var context = CreateInMemoryDbContext();
-            var mockLogger = new Mock<ILogger<StudyService>>();
-            var service = new StudyService(context, mockLogger.Object, CreateFeatureToggles());
-
-            var updatedEntry = new StudyEntry { Id = 999, Subject = "NoMatch" };
-            var result = await service.UpdateAsync(updatedEntry, CancellationToken.None);
-
-            Assert.False(result);
-            mockLogger.Verify(
-                x => x.Log(
-                    LogLevel.Warning,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Attempted to update non-existent entry with ID")),
                     null,
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
