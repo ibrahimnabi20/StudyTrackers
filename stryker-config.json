@@ -1,14 +1,9 @@
 {
   "stryker-config": {
     "project": "backend/StudyTracker.csproj",
-    "test-projects": [
-      "tests/UnitTests/UnitTests.csproj"
-    ],
-    "solution": "../StudyTrackers.sln",
-    "reporters": [
-      "html",
-      "progress"
-    ],
+    "test-projects": [ "backend/tests/UnitTests/UnitTests.csproj" ],
+    "solution": "StudyTrackers.sln",
+    "reporters": [ "html", "progress" ],
     "coverage-analysis": "perTest",
     "thresholds": {
       "high": 90,

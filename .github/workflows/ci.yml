@@ -62,12 +62,12 @@ jobs:
           dotnet test StudyTrackers.sln \
             --configuration Release \
             --collect:"XPlat Code Coverage" \
-            --results-directory tests/UnitTests/TestResults
+            --results-directory backend/tests/UnitTests/TestResults
 
       - name: Generate coverage report
         run: |
           dotnet tool run reportgenerator \
-            -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
+            -reports:"backend/tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
@@ -83,7 +83,7 @@ jobs:
         run: |
           dotnet tool run dotnet-stryker \
             --project backend/StudyTracker.csproj \
-            --test-project tests/UnitTests/UnitTests.csproj \
+            --test-project backend/tests/UnitTests/UnitTests.csproj \
             --solution StudyTrackers.sln \
             --config-file stryker-config.json
 
