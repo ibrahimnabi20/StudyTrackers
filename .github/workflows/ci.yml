@@ -10,7 +10,6 @@ jobs:
   build-test-release:
     runs-on: ubuntu-latest
 
-    # Start en MySQL‐service til migrations‐steppet
     services:
       mysql:
         image: mariadb:10.5
@@ -20,12 +19,11 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
-          --health-interval=10s
-          --health-timeout=5s
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
+          --health-interval=10s 
+          --health-timeout=5s 
           --health-retries=5
 
-    # Sørg for at din appsettings.DefaultConnection bruger denne connectionstring
     env:
       ConnectionStrings__DefaultConnection: "server=127.0.0.1;port=3306;database=studytrackerdb;user=root;password=mypassword;"
 
@@ -82,7 +80,16 @@ jobs:
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Run mutation tests
-        run: dotnet tool run dotnet-stryker -- --config-file stryker-config.json
+        working-directory: backend
+        run: |
+          dotnet tool run dotnet-stryker \
+            --project StudyTracker.csproj \
+            --test-project ../tests/UnitTests/UnitTests.csproj \
+            --reporters "html,progress" \
+            --coverage-analysis perTest \
+            --thresholds.high 90 \
+            --thresholds.low 80 \
+            --thresholds.break 80
 
       - name: Auto-increment version.txt
         run: |

@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using StudyTracker.Models;
 using StudyTracker.Services;
@@ -13,45 +12,26 @@ namespace StudyTracker.Controllers
     public class ExportController : ControllerBase
     {
         private readonly IStudyExportService _exportService;
-        private readonly FeatureToggles _toggles;
+        private readonly FeatureToggles _featureToggles;
         private readonly ILogger<ExportController> _logger;
 
-        // 3-param constructor for DI
         public ExportController(
             IStudyExportService exportService,
             IOptions<FeatureToggles> featureToggles,
             ILogger<ExportController> logger)
         {
             _exportService = exportService;
-            _toggles       = featureToggles.Value;
-            _logger        = logger;
+            _featureToggles = featureToggles.Value;
+            _logger = logger;
         }
 
-        // 2-param constructor (service + logger) — used by your existing tests
-        public ExportController(
-            IStudyExportService exportService,
-            ILogger<ExportController> logger)
-            : this(
-                exportService,
-                Options.Create(new FeatureToggles { EnableAdvancedExport = true }),
-                logger)
-        { }
-
-        // 1-param constructor (service only) — if any tests rely on this
-        public ExportController(IStudyExportService exportService)
-            : this(
-                exportService,
-                Options.Create(new FeatureToggles { EnableAdvancedExport = true }),
-                NullLogger<ExportController>.Instance)
-        { }
-
-        [HttpGet]
+        [HttpGet("export")]
         public IActionResult GetExport()
         {
-            if (!_toggles.EnableAdvancedExport)
+            if (!_featureToggles.EnableAdvancedExport)
             {
                 _logger.LogWarning("Advanced export feature is disabled.");
-                return BadRequest("Export feature is disabled.");
+                return Forbid();
             }
 
             var csvBytes = _exportService.ExportToCsv();
@@ -61,7 +41,10 @@ namespace StudyTracker.Controllers
                 return NoContent();
             }
 
-            var fileName = $"study-entries_{DateTime.UtcNow:yyyyMMdd}.csv";
+            // Denne log fanger testen, der forventer "Exported CSV"
+            _logger.LogInformation("Exported CSV");
+
+            var fileName = $"study-entries_{DateTime.UtcNow:yyyyMMddHHmmss}.csv";
             return File(csvBytes, "text/csv", fileName);
         }
     }

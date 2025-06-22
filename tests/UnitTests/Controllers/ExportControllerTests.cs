@@ -35,7 +35,7 @@ namespace UnitTests.Controllers
         }
 
         [Fact]
-        public void GetExport_ReturnsNoContent_WhenNoData()
+        public void GetExport_ReturnsNoContent_WhenNoData_And_LogsInformation()
         {
             // Arrange: service returns empty byte array
             _mockExportService.Setup(s => s.ExportToCsv())
@@ -46,6 +46,14 @@ namespace UnitTests.Controllers
 
             // Assert
             Assert.IsType<NoContentResult>(result);
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) => v.ToString().Contains("No data available for export")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
         }
 
         [Fact]
@@ -65,6 +73,14 @@ namespace UnitTests.Controllers
             Assert.Equal(csvData, fileResult.FileContents);
             Assert.StartsWith("study-entries_", fileResult.FileDownloadName);
             Assert.EndsWith(".csv", fileResult.FileDownloadName);
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) => v.ToString().Contains("Exported CSV")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
         }
     }
 }

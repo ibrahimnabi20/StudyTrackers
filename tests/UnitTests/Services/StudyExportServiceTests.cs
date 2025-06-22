@@ -22,12 +22,12 @@ namespace UnitTests.Services
         }
 
         [Fact]
-        public void ExportToCsv_ReturnsEmptyByteArray_WhenNoEntries()
+        public void ExportToCsv_ReturnsEmptyByteArray_WhenNoEntries_And_LogsWarning()
         {
             // Arrange
             var context = CreateInMemoryDbContext(Guid.NewGuid().ToString());
-            var logger  = Mock.Of<ILogger<StudyExportService>>();
-            var service = new StudyExportService(context, logger);
+            var mockLogger = new Mock<ILogger<StudyExportService>>();
+            var service = new StudyExportService(context, mockLogger.Object);
 
             // Act
             var result = service.ExportToCsv();
@@ -35,6 +35,14 @@ namespace UnitTests.Services
             // Assert
             Assert.NotNull(result);
             Assert.Empty(result);
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) => v.ToString().Contains("No study entries")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
         }
 
         [Fact]
@@ -49,8 +57,8 @@ namespace UnitTests.Services
             });
             context.SaveChanges();
 
-            var logger  = Mock.Of<ILogger<StudyExportService>>();
-            var service = new StudyExportService(context, logger);
+            var mockLogger = new Mock<ILogger<StudyExportService>>();
+            var service = new StudyExportService(context, mockLogger.Object);
 
             // Act
             var bytes = service.ExportToCsv();
@@ -60,6 +68,14 @@ namespace UnitTests.Services
             Assert.Contains("Id,Subject,DurationInMinutes,Timestamp", csv);
             Assert.Contains("1,\"Math\",60,2024-01-01T00:00:00", csv);
             Assert.Contains("2,\"Science\",45,2024-01-02T00:00:00", csv);
+            mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) => v.ToString().Contains("Exported 2 study entries")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
         }
     }
 }
