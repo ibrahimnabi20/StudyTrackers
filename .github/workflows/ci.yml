@@ -7,13 +7,14 @@ on:
     branches: [ "master" ]
 
 env:
-  # Din container registry (GitHub Container Registry som eksempel)
+  # Docker‐registry og image‐navn SKAL være lowercase!
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ibrahimnabi20/studytrackers
 
 jobs:
   build-test-quality:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mariadb:10.5
@@ -23,16 +24,16 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
-          --health-interval=10s 
-          --health-timeout=5s 
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
+          --health-interval=10s
+          --health-timeout=5s
           --health-retries=5
 
     env:
       ConnectionStrings__DefaultConnection: "server=127.0.0.1;port=3306;database=studytrackerdb;user=root;password=mypassword;"
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup .NET 8 SDK
@@ -40,7 +41,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install global tools
+      - name: Install .NET tools
         run: |
           dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
@@ -48,7 +49,7 @@ jobs:
           dotnet tool install dotnet-stryker
           dotnet tool install dotnet-ef
 
-      - name: Begin SonarQube analysis
+      - name: SonarQube begin
         run: |
           dotnet sonarscanner begin \
             /k:"StudyTracker" \
@@ -56,12 +57,12 @@ jobs:
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Restore & Build
+      - name: Restore and Build
         run: |
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --configuration Release --no-restore
 
-      - name: Run unit tests & collect coverage
+      - name: Run tests & collect coverage
         run: |
           dotnet test StudyTrackers.sln \
             --configuration Release \
@@ -71,43 +72,36 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          dotnet tool run reportgenerator \
+          reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
       - name: Apply EF Core migrations
-        run: |
-          dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
+        run: dotnet ef database update --project backend/StudyTracker.csproj
 
-      - name: End SonarQube analysis
+      - name: SonarQube end
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-      - name: Mutation testing (Stryker)
-        run: dotnet stryker --config-file stryker-config.json
-
-      - name: Package ZIP artifact
-        run: |
-          VERSION_FILE=version.txt
-          OLD=$(cat $VERSION_FILE)
-          NEW=$(date +'%Y.%m.%d.%H%M')
-          echo "$NEW" > $VERSION_FILE
-          zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
-
-      - name: Upload ZIP artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: StudyTrackers-${{ github.run_number }}
-          path: StudyTrackers_${{ github.run_number }}.zip
+      - name: Mutation tests (Stryker)
+        run: dotnet stryker --break-on 80
 
   docker-build-push:
     needs: build-test-quality
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build Docker image
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Docker image
         uses: docker/build-push-action@v4
         with:
           context: ./backend
@@ -116,7 +110,3 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          # Login til GHCR
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
