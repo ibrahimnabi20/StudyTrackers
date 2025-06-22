@@ -1,99 +1,101 @@
-name: CI – Build, Test, Quality & Package
+name: CI/CD Build & Release
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "master" ]
 
 jobs:
-  build-test:
+  build-test-release:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mariadb:10.5
+        env:
+          MYSQL_ROOT_PASSWORD: mypassword
+          MYSQL_DATABASE: studytrackerdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      ConnectionStrings__DefaultConnection: "server=127.0.0.1;port=3306;database=studytrackerdb;user=root;password=mypassword;"
+
     steps:
-      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. .NET SDK
-      - name: Setup .NET 8 SDK
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      # 3. Install global tools
       - name: Install .NET tools
         run: |
           dotnet new tool-manifest --force
-          dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-sonarscanner
+          dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-stryker
           dotnet tool install dotnet-ef
 
-      # 4. SonarQube begin
-      - name: SonarQube – begin analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Begin SonarQube analysis
         run: |
-          dotnet sonarscanner begin \
+          dotnet tool run dotnet-sonarscanner begin \
             /k:"StudyTracker" \
-            /d:sonar.login="${SONAR_TOKEN}" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      # 5. Restore & build
-      - name: Restore & build solution
+      - name: Restore and Build
         run: |
           dotnet restore StudyTrackers.sln
-          dotnet build StudyTrackers.sln \
-            --configuration Release \
-            --no-restore
+          dotnet build StudyTrackers.sln --configuration Release --no-restore
 
-      # 6. Unit tests + coverage
-      - name: Run unit tests & collect coverage
+      - name: Run tests & collect coverage
         run: |
-          dotnet test tests/UnitTests/UnitTests.csproj \
+          dotnet test StudyTrackers.sln \
             --configuration Release \
-            --no-build \
             --collect:"XPlat Code Coverage" \
             --results-directory tests/UnitTests/TestResults
 
-      # 7. Generate Cobertura report
       - name: Generate coverage report
         run: |
-          reportgenerator \
+          dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
-      # 8. EF Core migrations (against your dev DB)
       - name: Apply EF Core migrations
         run: |
-          dotnet ef database update \
+          dotnet tool run dotnet-ef database update \
             --project backend/StudyTracker.csproj
 
-      # 9. SonarQube end
-      - name: SonarQube – end analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet sonarscanner end \
-          /d:sonar.login="${SONAR_TOKEN}"
+      - name: End SonarQube analysis
+        run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-      # 10. Mutation testing
-      - name: Mutation tests (Stryker)
-        run: dotnet stryker --break-on 80
+      - name: Run mutation tests
+        run: dotnet tool run dotnet-stryker -- --config-file stryker-config.json
 
-      # 11. Package output
-      - name: Package backend build
+      - name: Auto-increment version.txt
         run: |
-          zip -r StudyTracker_Backend_${{ github.run_number }}.zip \
-            backend/bin/Release/net8.0
-          mkdir artifact
-          mv StudyTracker_Backend_*.zip artifact/
+          VERSION_FILE=version.txt
+          OLD_VERSION=$(cat $VERSION_FILE)
+          NEW_VERSION=$(date +'%Y.%m.%d.%H%M')
+          echo "$NEW_VERSION" > $VERSION_FILE
+          echo "Updated version.txt from $OLD_VERSION to $NEW_VERSION"
 
-      # 12. Upload artifact
-      - name: Upload build artifact
+      - name: Create ZIP release
+        run: |
+          zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
+
+      - name: Upload ZIP as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StudyTracker-backend
-          path: artifact/
+          name: StudyTrackers-${{ github.run_number }}
+          path: StudyTrackers_${{ github.run_number }}.zip
