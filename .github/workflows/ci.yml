@@ -80,17 +80,9 @@ jobs:
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Run mutation tests
+        # Skift til backend-mappen, så config-stien bliver korrekt
         working-directory: backend
-        run: |
-          dotnet tool run dotnet-stryker \
-            --project StudyTracker.csproj \
-            --test-project ../tests/UnitTests/UnitTests.csproj \
-            --solution ../StudyTrackers.sln \
-            --coverage-analysis perTest \
-            --reporters html,progress \
-            --thresholds.high 90 \
-            --thresholds.low 80 \
-            --thresholds.break 80
+        run: dotnet tool run dotnet-stryker --config-file ../stryker-config.json
 
       - name: Auto-increment version.txt
         run: |
