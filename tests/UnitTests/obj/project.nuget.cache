@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "z8Ta8wHfGyA=",
+  "dgSpecHash": "0CrXkuL5zZk=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ibrah\\Downloads\\StudyTrackers\\tests\\UnitTests\\UnitTests.csproj",
+  "projectFilePath": "C:\\Users\\ibrah\\RiderProjects\\StudyTrackers\\tests\\UnitTests\\UnitTests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ibrah\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\ibrah\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",

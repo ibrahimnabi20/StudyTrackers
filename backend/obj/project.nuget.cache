@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "K1T/8CJ0R9U=",
+  "dgSpecHash": "dMp9cxMCxjA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ibrah\\Downloads\\StudyTrackers\\backend\\StudyTracker.csproj",
+  "projectFilePath": "C:\\Users\\ibrah\\RiderProjects\\StudyTrackers\\backend\\StudyTracker.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ibrah\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\ibrah\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.0\\microsoft.aspnetcore.openapi.8.0.0.nupkg.sha512",

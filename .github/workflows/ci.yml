@@ -1,24 +1,28 @@
-name: CI/CD Build, Test & Deploy
+name: CI – Build, Test, Quality & Package
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ master ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ master ]
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      # 1. Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. .NET SDK
       - name: Setup .NET 8 SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: 8.0.x
 
-      - name: Install tools
+      # 3. Install global tools
+      - name: Install .NET tools
         run: |
           dotnet new tool-manifest --force
           dotnet tool install dotnet-reportgenerator-globaltool
@@ -26,20 +30,27 @@ jobs:
           dotnet tool install dotnet-stryker
           dotnet tool install dotnet-ef
 
-      - name: SonarQube begin
+      # 4. SonarQube begin
+      - name: SonarQube – begin analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet sonarscanner begin \
             /k:"StudyTracker" \
-            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.login="${SONAR_TOKEN}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Restore & build
+      # 5. Restore & build
+      - name: Restore & build solution
         run: |
           dotnet restore StudyTrackers.sln
-          dotnet build StudyTrackers.sln --configuration Release --no-restore
+          dotnet build StudyTrackers.sln \
+            --configuration Release \
+            --no-restore
 
-      - name: Run unit tests & coverage
+      # 6. Unit tests + coverage
+      - name: Run unit tests & collect coverage
         run: |
           dotnet test tests/UnitTests/UnitTests.csproj \
             --configuration Release \
@@ -47,6 +58,7 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory tests/UnitTests/TestResults
 
+      # 7. Generate Cobertura report
       - name: Generate coverage report
         run: |
           reportgenerator \
@@ -54,55 +66,34 @@ jobs:
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
 
+      # 8. EF Core migrations (against your dev DB)
       - name: Apply EF Core migrations
         run: |
-          dotnet ef database update --project backend/StudyTracker.csproj
+          dotnet ef database update \
+            --project backend/StudyTracker.csproj
 
-      - name: SonarQube end
-        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      # 9. SonarQube end
+      - name: SonarQube – end analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end \
+          /d:sonar.login="${SONAR_TOKEN}"
 
+      # 10. Mutation testing
       - name: Mutation tests (Stryker)
         run: dotnet stryker --break-on 80
 
-      - name: Package artifact
-        run: zip -r StudyTrackers_${{ github.run_number }}.zip backend/bin/Release/net8.0 && \
-          mkdir artifact && mv StudyTrackers_*.zip artifact/
+      # 11. Package output
+      - name: Package backend build
+        run: |
+          zip -r StudyTracker_Backend_${{ github.run_number }}.zip \
+            backend/bin/Release/net8.0
+          mkdir artifact
+          mv StudyTracker_Backend_*.zip artifact/
 
-      - name: Upload artifact
+      # 12. Upload artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StudyTracker-app
+          name: StudyTracker-backend
           path: artifact/
-
-  deploy-to-azure:
-    needs: build-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    environment:
-      name: staging
-      url: ${{ steps.deploy-webapp.outputs.webapp-url }}
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: StudyTracker-app
-          path: deploy_pkg/
-
-      - name: Setup .NET 8 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Unzip package
-        run: unzip deploy_pkg/StudyTrackers_*.zip -d deploy_pkg/app/
-
-      - name: Deploy to Azure WebApp
-        id: deploy-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: deploy_pkg/app/
-
-      - name: Azure URL
-        run: echo "Deployed to ${{ steps.deploy-webapp.outputs.webapp-url }}"
