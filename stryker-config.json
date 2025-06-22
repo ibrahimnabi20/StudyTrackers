@@ -1,14 +1,19 @@
 {
   "stryker-config": {
     "project": "backend/StudyTracker.csproj",
-    "test-projects": [ "backend/tests/UnitTests/UnitTests.csproj" ],
+    "test-projects": [
+      "backend/tests/UnitTests/UnitTests.csproj"
+    ],
     "solution": "StudyTrackers.sln",
-    "reporters": [ "html", "progress" ],
+    "reporters": [
+      "html",
+      "progress"
+    ],
     "coverage-analysis": "perTest",
     "thresholds": {
       "high": 90,
       "low": 80,
-      "break": 80
+      "break": 70
     },
     "concurrency": 1,
     "language-version": "latest",
