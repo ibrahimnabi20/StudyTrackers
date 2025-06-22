@@ -10,7 +10,6 @@ jobs:
   build-test-release:
     runs-on: ubuntu-latest
 
-    # Start en MySQL‐service til migrations‐steppet
     services:
       mysql:
         image: mariadb:10.5
@@ -19,14 +18,12 @@ jobs:
           MYSQL_DATABASE: studytrackerdb
         ports:
           - 3306:3306
-        # Vent til databasen er oppe
         options: >-
           --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
           --health-interval=10s 
           --health-timeout=5s 
           --health-retries=5
 
-    # Sæt miljøvariabel, så din appsettings‐DefaultConnection peger på runnertjenesten
     env:
       ConnectionStrings__DefaultConnection: "server=127.0.0.1;port=3306;database=studytrackerdb;user=root;password=mypassword;"
 
@@ -75,7 +72,6 @@ jobs:
             -reporttypes:"Cobertura"
 
       - name: Apply EF Core migrations
-        # Her kan EF nu connecte til MySQL‐servicen
         run: |
           dotnet tool run dotnet-ef database update \
             --project backend/StudyTracker.csproj
@@ -84,7 +80,8 @@ jobs:
         run: dotnet tool run dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Run mutation tests
-        run: dotnet tool run dotnet-stryker
+        run: |
+          dotnet tool run dotnet-stryker -- --config-file stryker-config.json
 
       - name: Auto-increment version.txt
         run: |
