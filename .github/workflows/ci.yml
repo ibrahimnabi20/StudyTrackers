@@ -7,8 +7,9 @@ on:
     branches: [ "master" ]
 
 env:
-  # Docker‐registry og image‐navn SKAL være lowercase!
+  # Din container registry (GitHub Container Registry som eksempel)
   REGISTRY: ghcr.io
+  # <owner>/<repo> i lowercase
   IMAGE_NAME: ibrahimnabi20/studytrackers
 
 jobs:
@@ -24,16 +25,16 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
-          --health-interval=10s
-          --health-timeout=5s
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
+          --health-interval=10s 
+          --health-timeout=5s 
           --health-retries=5
 
     env:
       ConnectionStrings__DefaultConnection: "server=127.0.0.1;port=3306;database=studytrackerdb;user=root;password=mypassword;"
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup .NET 8 SDK
@@ -41,7 +42,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install .NET tools
+      - name: Install global tools
         run: |
           dotnet new tool-manifest --force
           dotnet tool install dotnet-sonarscanner
@@ -49,7 +50,7 @@ jobs:
           dotnet tool install dotnet-stryker
           dotnet tool install dotnet-ef
 
-      - name: SonarQube begin
+      - name: Begin SonarQube analysis
         run: |
           dotnet sonarscanner begin \
             /k:"StudyTracker" \
@@ -57,12 +58,12 @@ jobs:
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
 
-      - name: Restore and Build
+      - name: Restore & Build
         run: |
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --configuration Release --no-restore
 
-      - name: Run tests & collect coverage
+      - name: Run unit tests & collect coverage
         run: |
           dotnet test StudyTrackers.sln \
             --configuration Release \
@@ -80,18 +81,32 @@ jobs:
       - name: Apply EF Core migrations
         run: dotnet ef database update --project backend/StudyTracker.csproj
 
-      - name: SonarQube end
+      - name: End SonarQube analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-      - name: Mutation tests (Stryker)
-        run: dotnet stryker --break-on 80
+      - name: Mutation testing (Stryker)
+        run: dotnet stryker --config-file stryker-config.json
+
+      - name: Package ZIP artifact
+        run: |
+          VERSION_FILE=version.txt
+          OLD=$(cat $VERSION_FILE)
+          NEW=$(date +'%Y.%m.%d.%H%M')
+          echo "$NEW" > $VERSION_FILE
+          zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyTrackers-${{ github.run_number }}
+          path: StudyTrackers_${{ github.run_number }}.zip
 
   docker-build-push:
     needs: build-test-quality
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Log in to GitHub Container Registry
