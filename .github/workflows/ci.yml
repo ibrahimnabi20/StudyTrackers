@@ -19,9 +19,9 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword" 
-          --health-interval=10s 
-          --health-timeout=5s 
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pmypassword"
+          --health-interval=10s
+          --health-timeout=5s
           --health-retries=5
 
     env:
@@ -85,8 +85,9 @@ jobs:
           dotnet tool run dotnet-stryker \
             --project StudyTracker.csproj \
             --test-project ../tests/UnitTests/UnitTests.csproj \
-            --reporters "html,progress" \
+            --solution ../StudyTrackers.sln \
             --coverage-analysis perTest \
+            --reporters html,progress \
             --thresholds.high 90 \
             --thresholds.low 80 \
             --thresholds.break 80
