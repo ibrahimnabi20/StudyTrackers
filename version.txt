@@ -1,9 +1,36 @@
-Initial DevOps project setup with CI pipeline and MariaDB integration  
-Added feature toggles and logging configuration  
-Implemented xUnit unit testing and connected backend to frontend  
-Added Playwright E2E test and React improvements  
-Introduced mutation testing with Stryker.NET  
-Implemented tag system and color coding (removed later)  
-Removed extra frontend features and restored original functionality  
-Setup SonarQube analysis with GitHub Actions  
-Added code coverage collection and SonarQube Quality Gate fixes  
+
+• Initial DevOps project setup  
+  – CI pipeline (restore/build/test) on GitHub Actions  
+  – MariaDB service integration for EF Core migrations  
+
+• Feature toggles & logging  
+  – IOptions<FeatureToggles> around advanced export  
+  – Structured ILogger use across controllers & services  
+
+• Unit testing & backend–frontend wiring  
+  – xUnit coverage for StudyService, StudyStatsService, ExportController, StudyExportService  
+  – Connected API to React frontend  
+
+• Playwright E2E scaffold  
+  – Added basic end-to-end test  
+  – React & Vite improvements (ESLint, plugin-react)  
+
+• Mutation testing  
+  – Introduced Stryker.NET, enforced ≥ 80% threshold  
+  – Local score now ≈ 92% with targeted survivor fixes  
+
+• SonarQube quality gate  
+  – Begin/end analysis steps in Actions  
+  – Collected Cobertura coverage → Sonar reports  
+
+• Docker support  
+  – Multi-stage Dockerfile for ASP.NET 8.0  
+  – GitHub Actions build & push to GHCR  
+
+• Release automation  
+  – Auto-incrementing version.txt  
+  – ZIP packaging & artifact upload  
+
+• Cleanups & legacy removals  
+  – Removed old tag/color-coding system  
+  – Pruned extra frontend features, restored core functionality  

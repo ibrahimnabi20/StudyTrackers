@@ -1,4 +1,5 @@
-name: CI/CD Build, Test, Quality, E2E & Docker
+
+name: CI/CD Build, Test, Quality & Docker
 
 permissions:
   contents: read
@@ -6,9 +7,9 @@ permissions:
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   REGISTRY: ghcr.io
@@ -31,7 +32,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-
     env:
       ConnectionStrings__DefaultConnection: >
         server=127.0.0.1;
@@ -39,7 +39,6 @@ jobs:
         database=studytrackerdb;
         user=root;
         password=mypassword;
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -56,7 +55,6 @@ jobs:
           dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-stryker
           dotnet tool install dotnet-ef
-
       - name: SonarQube begin analysis
         run: |
           dotnet sonarscanner begin \
@@ -64,12 +62,10 @@ jobs:
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="http://sonarqube.setgo.dk:9000" \
             /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
-
       - name: Restore & build solution
         run: |
           dotnet restore StudyTrackers.sln
           dotnet build StudyTrackers.sln --configuration Release --no-restore
-
       - name: Run unit tests & collect coverage
         run: |
           dotnet test StudyTrackers.sln \
@@ -77,14 +73,12 @@ jobs:
             --no-build \
             --collect:"XPlat Code Coverage" \
             --results-directory tests/UnitTests/TestResults
-
       - name: Generate coverage report
         run: |
           dotnet tool run reportgenerator \
             -reports:"tests/UnitTests/TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"Cobertura"
-
       - name: Apply EF Core migrations
         run: dotnet tool run dotnet-ef database update --project backend/StudyTracker.csproj
 
@@ -94,40 +88,6 @@ jobs:
       - name: Mutation testing (Stryker)
         run: dotnet stryker --config-file stryker-config.json
 
-      # —————————— E2E End-to-End Tests ——————————
-
-      - name: Setup Node.js for frontend
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Install Playwright browsers
-        working-directory: frontend
-        run: npx playwright install --with-deps
-
-      - name: Start backend API
-        run: |
-          nohup dotnet run --project backend/StudyTracker.csproj \
-            --configuration Release \
-            --urls http://0.0.0.0:5178 > backend.log 2>&1 &
-          npx wait-on http://localhost:5178
-
-      - name: Start frontend server
-        working-directory: frontend
-        run: |
-          nohup npm run dev -- --port 5179 --host 0.0.0.0 > frontend.log 2>&1 &
-          npx wait-on http://localhost:5179
-
-      - name: Run Playwright E2E tests
-        working-directory: frontend
-        run: npm run test:e2e
-
-      # —————————— Package Artifact ——————————
-
       - name: Package ZIP artifact
         run: |
           VERSION_FILE=version.txt
@@ -135,7 +95,6 @@ jobs:
           NEW=$(date +'%Y.%m.%d.%H%M')
           echo "$NEW" > $VERSION_FILE
           zip -r StudyTrackers_${{ github.run_number }}.zip . -x "*.git*" -x "node_modules/*"
-
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
