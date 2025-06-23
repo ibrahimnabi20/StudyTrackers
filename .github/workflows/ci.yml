@@ -1,4 +1,4 @@
-name: CI/CD Build, Test, Quality & Docker
+name: CI/CD Build, Test, Quality, E2E & Docker
 
 permissions:
   contents: read
@@ -94,6 +94,8 @@ jobs:
       - name: Mutation testing (Stryker)
         run: dotnet stryker --config-file stryker-config.json
 
+      # —————————— E2E End-to-End Tests ——————————
+
       - name: Setup Node.js for frontend
         uses: actions/setup-node@v3
         with:
@@ -107,15 +109,24 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps
 
+      - name: Start backend API
+        run: |
+          nohup dotnet run --project backend/StudyTracker.csproj \
+            --configuration Release \
+            --urls http://0.0.0.0:5178 > backend.log 2>&1 &
+          npx wait-on http://localhost:5178
+
       - name: Start frontend server
         working-directory: frontend
         run: |
-          nohup npm run dev -- --port 5179 > server.log 2>&1 &
+          nohup npm run dev -- --port 5179 --host 0.0.0.0 > frontend.log 2>&1 &
           npx wait-on http://localhost:5179
 
       - name: Run Playwright E2E tests
         working-directory: frontend
         run: npm run test:e2e
+
+      # —————————— Package Artifact ——————————
 
       - name: Package ZIP artifact
         run: |
