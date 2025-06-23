@@ -6,9 +6,9 @@ permissions:
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 env:
   REGISTRY: ghcr.io
@@ -93,6 +93,29 @@ jobs:
 
       - name: Mutation testing (Stryker)
         run: dotnet stryker --config-file stryker-config.json
+
+      - name: Setup Node.js for frontend
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps
+
+      - name: Start frontend server
+        working-directory: frontend
+        run: |
+          nohup npm run dev -- --port 5179 > server.log 2>&1 &
+          npx wait-on http://localhost:5179
+
+      - name: Run Playwright E2E tests
+        working-directory: frontend
+        run: npm run test:e2e
 
       - name: Package ZIP artifact
         run: |
